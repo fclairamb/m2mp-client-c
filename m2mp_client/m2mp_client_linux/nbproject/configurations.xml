@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="80">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="src" displayName="src" projectFiles="true">
+        <itemPath>../src/_endian_.h</itemPath>
+        <itemPath>../src/dictionnary.c</itemPath>
+        <itemPath>../src/dictionnary.h</itemPath>
+        <itemPath>../src/linkedlist.c</itemPath>
+        <itemPath>../src/linkedlist.h</itemPath>
+        <itemPath>../src/logging.c</itemPath>
+        <itemPath>../src/logging.h</itemPath>
+        <itemPath>../src/m2mp_client.c</itemPath>
+        <itemPath>../src/m2mp_client.h</itemPath>
+        <itemPath>../src/m2mp_client_commands.c</itemPath>
+        <itemPath>../src/m2mp_client_commands.h</itemPath>
+        <itemPath>../src/m2mp_client_files.c</itemPath>
+        <itemPath>../src/m2mp_client_files.h</itemPath>
+        <itemPath>../src/m2mp_client_internal.h</itemPath>
+        <itemPath>../src/m2mp_client_settings.c</itemPath>
+        <itemPath>../src/m2mp_client_settings.h</itemPath>
+        <itemPath>../src/m2mp_client_types.h</itemPath>
+        <itemPath>../src/memwatcher.c</itemPath>
+        <itemPath>../src/memwatcher.h</itemPath>
+        <itemPath>../src/memwatcher_logalloc.h</itemPath>
+        <itemPath>../src/str.c</itemPath>
+        <itemPath>../src/str.h</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>../src</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="3">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>GNU|GNU</compilerSet>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>0</developmentMode>
+          <incDir>
+            <pElem>../src</pElem>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <commandLine>-g</commandLine>
+          <preprocessorList>
+            <Elem>DEBUG</Elem>
+          </preprocessorList>
+          <warningLevel>3</warningLevel>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <warningLevel>3</warningLevel>
+        </ccTool>
+        <archiverTool>
+        </archiverTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="3">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>GNU|GNU</compilerSet>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>0</developmentMode>
+          <commandLine>-Os</commandLine>
+          <preprocessorList>
+            <Elem>NDEBUG</Elem>
+          </preprocessorList>
+          <warningLevel>3</warningLevel>
+        </cTool>
+        <ccTool>
+          <developmentMode>0</developmentMode>
+          <commandLine>-Os</commandLine>
+          <preprocessorList>
+            <Elem>LOGGING_LEVEL=LVL_NOTICE</Elem>
+          </preprocessorList>
+          <warningLevel>3</warningLevel>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <archiverTool>
+        </archiverTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
