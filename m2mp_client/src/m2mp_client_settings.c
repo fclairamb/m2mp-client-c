@@ -77,7 +77,7 @@ void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_cli
     if (get) {
         getCellsList = linkedlist_new();
         //mw_add(getCellsList, __FILE__, __LINE__, __FUNCTION__);
-        linkedlist_insert_last(getCellsList, str_clone("g"));
+        linkedlist_insert_last(getCellsList, strdup("g"));
     }
 
     int i;

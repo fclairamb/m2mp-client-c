@@ -2,7 +2,9 @@
  * File:   memwatcher.h
  * Author: florent
  *
- * Created on 30 January 2011, 02:00
+ * This is a memory monitoring code. It is very slow (o complexity) for seaching
+ * pointer it monitors. But this allows to find potential memory leak directly
+ * on some lame Linux environment.
  */
 
 #ifndef MEMWATCHER_H
@@ -11,15 +13,21 @@
 #define MEMWATCHER_LOG
 
 #include "linkedlist.h"
-#include "memwatcher_logalloc.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-#ifdef MEMWATCHER
-
+#ifdef MEMWATCHER_LOGALLOC
+	/** malloc is overloaded for logging purposes */
+#define malloc( s ) __malloc_log( s, __FILE__, __LINE__, __FUNCTION__ )
+	/** free is overloaded for logging purposes */
+#define free( p ) __free_log( p, __FILE__, __LINE__, __FUNCTION__ )
+	/** realloc is overloaded for logging purposes */
+#define realloc( p, s ) __realloc_log( p, s, __FILE__, __LINE__, __FUNCTION__ )
+#endif
 	
+#ifdef MEMWATCHER
 	/** Memory allocation and tracking */
 #define mw_malloc( s ) __mw_malloc( s , __FILE__, __LINE__, __FUNCTION__ )
 	/** Memory liberation and tracking */
@@ -47,14 +55,40 @@ extern "C" {
 #define mw_rmv( p )
 #endif
 
+	/** 
+	 * Memwatcher initialization
+	 */
 	void __mw_init();
 
+	/**
+	 * Memwatcher pointer monitoring addition
+     * @param ptr Pointer
+     * @param file File
+     * @param line Line
+     * @param function Function
+     */
 	void __mw_add(void * ptr, const char * file, int line, const char * function);
 
+	/**
+	 * Memwatcher pointer allocation + monitoring
+     * @param size Size of the pointer
+     * @param file File
+     * @param line Line
+     * @param function Function
+     * @return Allocated memory pointer
+     */
 	void * __mw_malloc(size_t size, const char * file /* = 0 */, int line /* = 0 */, const char * function /* = 0 */);
 
+	/**
+	 * Memwatcher pointer monitoring removal
+     * @param ptr Pointer to stop monitoring
+     */
 	void __mw_rmv(void * ptr);
 
+	/**
+	 * Memwatcher 
+     * @param ptr
+     */
 	void __mw_free(void * ptr);
 
 	void * __mw_realloc(void * ptr, size_t size, const char * file /* = 0 */, int line /* = 0 */, const char * function /* = 0 */);

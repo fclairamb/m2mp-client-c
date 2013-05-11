@@ -29,9 +29,6 @@ void __free_log( void * ptr, const char * file /* = 0 */, int line /* = 0 */, co
 	free( ptr );
 }
 
-
-#include "memwatcher_logalloc.h"
-
 #define MEMWATCHER_CORE
 
     typedef struct st_mw_meminfo {
@@ -41,7 +38,7 @@ void __free_log( void * ptr, const char * file /* = 0 */, int line /* = 0 */, co
         const char * function;
     } mw_meminfo;
 
-linkedlist ptrs_;
+static linkedlist ptrs_;
 
 void __mw_init() {
 	linkedlist_init(& ptrs_);

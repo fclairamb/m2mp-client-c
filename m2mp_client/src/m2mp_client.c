@@ -23,8 +23,8 @@
 m2mp_client_status_entry * m2mp_client_status_entry_new( const char * name, const char * value ) {
 	m2mp_client_status_entry * entry = mw_malloc( sizeof(m2mp_client_status_entry ) );
 	
-	entry->name = str_clone( name );
-	entry->value = str_clone( value );
+	entry->name = strdup( name );
+	entry->value = strdup( value );
 	
 	return entry;
 }
@@ -350,7 +350,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
     { // We create the connected event
         m2mp_client_event_connected * event = (m2mp_client_event_connected *) mw_malloc( sizeof(m2mp_client_event_connected) );
         event->base.type = M2MP_CLIENT_EVENT_CONNECTED;
-        event->serverHostname = str_clone( hostname );
+        event->serverHostname = strdup( hostname );
         event->serverPort = port;
         m2mp_client_add_event( this, (m2mp_client_event *) event );
     }
@@ -737,7 +737,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
         m2mp_client_event_data * event = (m2mp_client_event_data *) mw_malloc(sizeof (m2mp_client_event_data));
         event->base.type = M2MP_CLIENT_EVENT_DATA;
         event->length = (data[1] - 1);
-        event->channelName = str_clone(m2mp_client_channels_get_name(this->recvChannels, (int) data[2]));
+        event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[2]));
         event->data = (BYTE *) mw_malloc(sizeof (BYTE) * event->length);
         memcpy(event->data, & data[3], event->length);
         m2mp_client_add_event(this, (m2mp_client_event*) event);
@@ -745,7 +745,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
         m2mp_client_event_data *event = (m2mp_client_event_data *) mw_malloc(sizeof (m2mp_client_event_data));
         event->base.type = M2MP_CLIENT_EVENT_DATA;
         event->length = (size_t) le16toh(&data[1]) - 1;
-        event->channelName = str_clone(m2mp_client_channels_get_name(this->recvChannels, (int) data[3]));
+        event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[3]));
         event->data = (BYTE *) mw_malloc(sizeof (BYTE) * event->length);
         memcpy(event->data, & data[4], event->length);
         m2mp_client_add_event(this, (m2mp_client_event*) event);
@@ -753,7 +753,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
         m2mp_client_event_data * event = (m2mp_client_event_data *) mw_malloc(sizeof (m2mp_client_event_data));
         event->base.type = M2MP_CLIENT_EVENT_DATA;
         event->length = (size_t) le32toh(&data[1]) - 1;
-        event->channelName = str_clone(m2mp_client_channels_get_name(this->recvChannels, (int) data[5]));
+        event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[5]));
         event->data = (BYTE *) mw_malloc(sizeof (BYTE) * event->length);
         memcpy(event->data, &data[6], event->length);
         m2mp_client_add_event(this, (m2mp_client_event*) event);
@@ -774,7 +774,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
 
         if (data[0] == PROT_R_NC_DATAARRAY) {
             totalLength = (size_t) data[1] + 2;
-            event->channelName = str_clone(m2mp_client_channels_get_name(this->recvChannels, (int) data[2]));
+            event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[2]));
             offset = 3;
 
             // We add each element to a linked list
@@ -791,7 +791,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
             }
         } else if (data[0] == PROT_R_NC_DATAARRAY_LARGE) {
             totalLength = (size_t) (uint16_t) le16toh(*((uint16_t *) & data[1])) + 3;
-            event->channelName = str_clone(m2mp_client_channels_get_name(this->recvChannels, (int) data[3]));
+            event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[3]));
             offset = 4;
 
             // We add each element to a linked list
@@ -808,7 +808,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
             }
         } else if (data[0] == PROT_R_NC_DATAARRAY_VERYLARGE) {
             totalLength = (size_t) (uint32_t) le32toh(*((uint32_t *) & data[1])) + 5;
-            event->channelName = str_clone(m2mp_client_channels_get_name(this->recvChannels, (int) data[5]));
+            event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[5]));
             offset = 6;
 
             // We add each element to a linked list
@@ -907,7 +907,7 @@ m2mp_client_event * m2mp_client_work(m2mp_client * this, int timeout /* = 500 */
 					// If we found something
 					if ( value ) {
 						// We need to create a string in the form <name>=<value>
-						char * returned = str_clone(name);
+						char * returned = strdup(name);
 						str_append(&returned, "=");
 						str_append(&returned,value);
 						const char *tab[] =  { "g", returned, NULL };
@@ -1032,7 +1032,7 @@ void m2mp_client_channels_set_id_and_name(char * channels[256], const unsigned c
     if (channels[id])
         mw_free(channels[id]);
 
-    channels[id] = str_clone(name);
+    channels[id] = strdup(name);
 }
 
 int m2mp_client_channels_get_id(m2mp_client * this, char * channels[256], const char * name) {
@@ -1059,7 +1059,7 @@ int m2mp_client_channels_get_id(m2mp_client * this, char * channels[256], const 
     }
 
     // We save the channel but we copy it first
-	char * name_copy = str_clone(name);
+	char * name_copy = strdup(name);
     channels[firstEmpty] = name_copy;
 
     m2mp_client_send_channel_id_and_name(this, (unsigned char) firstEmpty, name_copy);

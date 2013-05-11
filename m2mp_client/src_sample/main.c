@@ -12,13 +12,12 @@
 #include <time.h>
 #include <sys/time.h>
 #include "m2mp_client.h"
-#include "m2mp_client_files.h"
 #include "m2mp_client_settings.h"
 #include "m2mp_client_commands.h"
 #include "logging.h"
 #include "memwatcher.h"
 
-const char * capabilities_ [] = {"sensor", "echo", NULL};
+const char * capabilities_ [] = {"sensor", "echo", "c_client_sample", NULL};
 
 typedef struct st_business_logic {
 	struct timeval time;
@@ -87,9 +86,6 @@ int main(int argc, char** argv) {
 	// We create the M2MP client
 	m2mp_client * client = m2mp_client_new();
 	assert(client);
-
-	// We load the files management plugin (not working yet)
-	m2mp_client_files * filesPlugin = m2mp_client_files_new(client);
 
 	// We load the settings management plugin
 	m2mp_client_settings * settingsPlugin = m2mp_client_settings_new(client);
@@ -190,12 +186,11 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	// We unsubscribe the two plugins
-	m2mp_client_rmv_plugin(client, filesPlugin);
+	// We unsubscribe the plugins
 	m2mp_client_rmv_plugin(client, settingsPlugin);
+	m2mp_client_rmv_plugin(client, commandsPlugin);
 
-	// We delete the two plugins
-	m2mp_client_files_delete(& filesPlugin);
+	// We delete the plugins
 	m2mp_client_settings_delete(& settingsPlugin);
 	m2mp_client_commands_delete(commandsPlugin);
 

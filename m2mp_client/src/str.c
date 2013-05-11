@@ -3,19 +3,6 @@
 
 #include "str.h"
 
-
-
-char * str_clone(const char * str) {
-    if (!str)
-        return NULL;
-
-    size_t len = strlen(str);
-    char * str2 = mw_malloc(sizeof ( char) * (len + 1));
-    memcpy(str2, str, len * sizeof (char));
-    str2[ len ] = '\0';
-    return str2;
-}
-
 void str_append( char ** str, const char * add ) {
 	
 	// We calculate the length of the destination string
@@ -28,7 +15,7 @@ void str_append( char ** str, const char * add ) {
 char * str_array_implode( const char ** array, const char *separator ) {
 	int i = 0;
 	
-	char * out = str_clone("");
+	char * out = strdup("");
 	
 	while( array[i]) {
 		if ( i > 0 )
@@ -47,7 +34,7 @@ char ** str_array_clone(const char ** array) {
 
     int i;
     for (i = 0; i < len; ++i)
-        new_array[i] = str_clone(array[i]);
+        new_array[i] = strdup(array[i]);
 
     new_array[len] = NULL;
 

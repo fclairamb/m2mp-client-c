@@ -8,8 +8,8 @@
 
 dictionnary_entry * dictionnary_entry_new(const char * name, const char * value) {
 	dictionnary_entry * this = (dictionnary_entry *) mw_malloc(sizeof (dictionnary_entry));
-	this->name = str_clone(name);
-	this->value = str_clone(value);
+	this->name = strdup(name);
+	this->value = strdup(value);
 	return this;
 }
 

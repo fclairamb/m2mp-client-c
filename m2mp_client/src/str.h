@@ -17,7 +17,7 @@ extern "C" {
 	 * @param str String to clone
 	 * @return Cloned string
 	 */
-	char * str_clone(const char * str);
+	char * strdup(const char * str);
 
 	/**
 	 * Clone an array of strings

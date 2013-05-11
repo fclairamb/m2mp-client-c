@@ -19,7 +19,6 @@ ifeq "$(CONF)" ""
 endif
 
 CC=$(CROSS)gcc
-CXX=$(CROSS)g++
 AR=$(CROSS)ar
 STRIP=$(CROSS)strip
 
@@ -34,7 +33,7 @@ ifeq "$(CONF)" "Release"
 endif
 
 ifeq "$(CONF)" "Size"
-    CFLAGS=-Os -DNDEBUG $(CFLAGS_COMMON) $(ARCHFLAGS) 
+    CFLAGS=-Os -DNDEBUG $(CFLAGS_COMMON) $(ARCHFLAGS) -DLOGGING_LEVEL=0
 endif
 
 CXXFLAGS=$(CFLAGS)
@@ -42,8 +41,11 @@ BUILD=build/lib/$(CROSS)$(CONF)
 BUILD_SAMPLE=build/sample/$(CROSS)$(CONF)
 DIST=dist/$(CROSS)$(CONF)
 
-TARGET=$(DIST)/libm2mp_client.so
-TARGET_SAMPLE=$(DIST)/m2mp_client_sample
+NAME=m2mp_client
+TARGET_SHARED=$(DIST)/lib$(NAME).so
+TARGET_STATIC=$(DIST)/lib$(NAME).a
+TARGET_SAMPLE_STATIC=$(DIST)/m2mp_client_sample_static
+TARGET_SAMPLE_SHARED=$(DIST)/m2mp_client_sample_shared
 
 # SPECIFIC part
 INCLUDE=-Isrc -I$(DESTDIR)/usr/include
@@ -64,22 +66,22 @@ OBJ_SAMPLE=$(addprefix $(BUILD)/,$(patsubst %.c,%.o,$(wildcard $(SRCS_SAMPLE))))
 
 all: build build_sample
 
-run: $(TARGET_SAMPLE)
-	LD_LIBRARY_PATH=$(DIST) $(TARGET_SAMPLE) $(RUN_ARGS)
+run: $(TARGET_SAMPLE_STATIC)
+	$(TARGET_SAMPLE_STATIC) $(RUN_ARGS)
 
-run-valgrind: $(TARGET)
-	valgrind --leak-check=full --show-reachable=yes --track-origins=yes $(TARGET) $(RUN_ARGS)
+run-valgrind: $(TARGET_SAMPLE_STATIC)
+	valgrind --leak-check=full --show-reachable=yes --track-origins=yes $(TARGET_SAMPLE_STATIC) $(RUN_ARGS)
 
-run-valgrind-gdb: $(TARGET)
-	sudo valgrind --db-attach=yes --leak-check=full --show-reachable=yes --track-origins=yes $(TARGET) $(RUN_ARGS)
+run-valgrind-gdb: $(TARGET_SAMPLE_STATIC)
+	sudo LD_LIBRARY_PATH=$(DIST) valgrind --db-attach=yes --leak-check=full --show-reachable=yes --track-origins=yes $(TARGET_SAMPLE) $(RUN_ARGS)
 # For some unknown reasons, it seems the --db-attach requires valgrind to be run in sudo
 
-run-callgrind: $(TARGET)
+run-callgrind: $(TARGET_SAMPLE_STATIC)
 	@rm -f callgrind.*
-	@valgrind --tool=callgrind $(TARGET) -- $(RUN_ARGS)
+	@valgrind --tool=callgrind $(TARGET_SAMPLE_STATIC) -- $(RUN_ARGS)
 	kcachegrind callgrind.out.* &
 
-build: $(TARGET)
+build: $(TARGET_SAMPLE_STATIC) $(TARGET_SAMPLE_SHARED)
 	@[ ! -e dist/last ] || rm dist/last
 	@ln -s $(CROSS)$(CONF) dist/last
 
@@ -89,15 +91,24 @@ $(DIST):
 	[ -e $(DIST) ] || mkdir -p $(DIST)
 	touch $(DIST)
 
-$(TARGET): $(OBJ) $(DIST)
-	$(CC) -shared -o $(TARGET) $(OBJ) $(CFLAGS) $(LDFLAGS) 
+$(TARGET_SHARED): $(OBJ) $(DIST)
+	$(CC) -shared -o $(TARGET_SHARED) $(OBJ) $(CFLAGS) $(LDFLAGS) 
+	
+$(TARGET_STATIC): $(OBJ) $(DIST)
+	$(AR) rcs $(TARGET_STATIC) $(OBJ)
 
-$(TARGET_SAMPLE): $(OBJ_SAMPLE) $(TARGET)
-	$(CC) -o $(TARGET_SAMPLE)  $(OBJ_SAMPLE) -lm2mp_client $(CFLAGS) $(LDFLAGS)
-
-test: $(TARGET_TEST)
-	$(TARGET)
-
+$(TARGET_SAMPLE_SHARED): $(OBJ_SAMPLE) $(TARGET_SHARED)
+	$(CC) -o $(TARGET_SAMPLE_SHARED) $(OBJ_SAMPLE) -lm2mp_client $(CFLAGS) $(LDFLAGS)
+	
+$(TARGET_SAMPLE_STATIC): $(OBJ_SAMPLE) $(TARGET_STATIC)
+	$(CC) -o $(TARGET_SAMPLE_STATIC) $(OBJ_SAMPLE) $(TARGET_STATIC) $(CFLAGS) $(LDFLAGS)
+	
+small: $(TARGET_SAMPLE_STATIC) $(TARGET_SAMPLE_SHARED) 
+	$(STRIP) $(TARGET_SAMPLE_STATIC) 
+	$(STRIP) $(TARGET_SAMPLE_SHARED)
+	[ ! -e /usr/bin/upx ] || /usr/bin/upx -9 $(TARGET_SAMPLE_STATIC)
+	[ ! -e /usr/bin/upx ] || /usr/bin/upx -9 $(TARGET_SAMPLE_SHARED)
+	
 $(BUILD)/%.o: %.c $(BUILD)
 	$(CC) -o $@ -c $(CFLAGS) $(INCLUDE)  $<
 
