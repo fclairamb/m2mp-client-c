@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="84">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="m2mp_client"
+                   displayName="m2mp_client"
+                   projectFiles="true"
+                   root=".">
+      <logicalFolder name="src" displayName="src" projectFiles="true">
+        <itemPath>src/_endian_.h</itemPath>
+        <itemPath>src/dictionnary.c</itemPath>
+        <itemPath>src/dictionnary.h</itemPath>
+        <itemPath>src/linkedlist.c</itemPath>
+        <itemPath>src/linkedlist.h</itemPath>
+        <itemPath>src/logging.c</itemPath>
+        <itemPath>src/logging.h</itemPath>
+        <itemPath>src/m2mp_client.c</itemPath>
+        <itemPath>src/m2mp_client.h</itemPath>
+        <itemPath>src/m2mp_client_commands.c</itemPath>
+        <itemPath>src/m2mp_client_commands.h</itemPath>
+        <itemPath>src/m2mp_client_internal.h</itemPath>
+        <itemPath>src/m2mp_client_settings.c</itemPath>
+        <itemPath>src/m2mp_client_settings.h</itemPath>
+        <itemPath>src/m2mp_client_types.h</itemPath>
+        <itemPath>src/memwatcher.c</itemPath>
+        <itemPath>src/memwatcher.h</itemPath>
+        <itemPath>src/str.c</itemPath>
+        <itemPath>src/str.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="src_sample" displayName="src_sample" projectFiles="true">
+        <itemPath>src_sample/main.c</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter></sourceFolderFilter>
+  <sourceRootList>
+    <Elem>src</Elem>
+    <Elem>src_test</Elem>
+    <Elem>src_sample</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>.</buildCommandWorkingDir>
+          <buildCommand>${MAKE}</buildCommand>
+          <cleanCommand>${MAKE} clean</cleanCommand>
+          <executablePath>dist/Debug/m2mp_client_sample_static</executablePath>
+          <cTool>
+            <incDir>
+              <pElem>src</pElem>
+              <pElem>.</pElem>
+              <pElem>//usr/include</pElem>
+            </incDir>
+          </cTool>
+        </makeTool>
+      </makefileType>
+      <item path="src/_endian_.h" ex="true" tool="3" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
