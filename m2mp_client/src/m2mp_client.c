@@ -1,5 +1,3 @@
-
-
 #include "m2mp_client_internal.h"
 #include "dictionnary.h"
 #include "memwatcher.h"
@@ -925,7 +923,7 @@ m2mp_client_event * m2mp_client_work(m2mp_client * this, int timeout /* = 500 */
 			
 		}
 		else if (event->type == M2MP_CLIENT_EVENT_DATA) {
-            m2mp_client_event_data * dataEvent = (m2mp_client_event_data*) event;
+            //m2mp_client_event_data * dataEvent = (m2mp_client_event_data*) event;
 			
 			// This is NOT supported anymore
 /*

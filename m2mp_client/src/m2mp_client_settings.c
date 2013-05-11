@@ -176,7 +176,7 @@ dictionnary_entry * m2mp_client_settings_get_entry(m2mp_client_settings * this, 
 }
 
 unsigned char m2mp_client_settings_rmv(m2mp_client_settings * this, char * name) {
-	dictionnary_rmv( & this->settings, name );
+	return dictionnary_rmv( & this->settings, name );
 }
 
 void m2mp_client_settings_set_value_impl(m2mp_client_settings * this, char * name, char * value) {

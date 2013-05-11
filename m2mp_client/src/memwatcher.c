@@ -14,18 +14,18 @@
 
 void * __malloc_log( size_t s, const char * file /* = 0 */, int line /* = 0 */, const char * function /* = 0 */ ) {
 	void * ptr = malloc(s);
-	LOG(LVL_DEBUG, "malloc(%d):0x%08X @%s:%d:%s", s, ptr, file, line, function );
+	LOG(LVL_DEBUG, "malloc(%zu):0x%p @%s:%d:%s", s, ptr, file, line, function );
 	return ptr;
 }
 
 void * __realloc_log( void * p, size_t s, const char * file /* = 0 */, int line /* = 0 */, const char * function /* = 0 */ ) {
 	void * ptr = realloc(p, s);
-	LOG(LVL_DEBUG,"realloc(0x%08X, %d):0x%08X @%s:%d:%s", p, s, ptr, file, line, function );
+	LOG(LVL_DEBUG,"realloc(0x%p, %zu):0x%p @%s:%d:%s", p, s, ptr, file, line, function );
 	return ptr;
 }
 
 void __free_log( void * ptr, const char * file /* = 0 */, int line /* = 0 */, const char * function /* = 0 */ ) {
-	LOG(LVL_DEBUG, "free(0x%08X); @%s:%d:%s", ptr, file, line, function );
+	LOG(LVL_DEBUG, "free(0x%p); @%s:%d:%s", ptr, file, line, function );
 	free( ptr );
 }
 

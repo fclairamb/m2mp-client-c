@@ -64,16 +64,17 @@ dictionnary_entry ** dictionnary_get_all(dictionnary* this) {
 	return array;
 }
 
-void dictionnary_rmv(dictionnary * this, const char * name) {
+unsigned char dictionnary_rmv(dictionnary * this, const char * name) {
 	linkedlist_node * node = this->list.first;
 	while (node) {
 		dictionnary_entry * entry = (dictionnary_entry *) node->element;
 		if (!strcmp(name, entry->name)) {
 			linkedlist_remove(& this->list, (void*) entry);
-			break;
+			return 0;
 		}
 		node = node->next;
 	}
+	return 1;
 }
 
 void dictionnary_clear(dictionnary* this) {

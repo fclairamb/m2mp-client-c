@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
 #include <sys/time.h>
 #include "m2mp_client.h"
 #include "m2mp_client_files.h"
@@ -31,9 +32,9 @@ typedef struct st_business_logic {
 	int echo_counter;
 
 	unsigned char quit;
-} business_logic;
+} business_logic_t;
 
-void business_logic_init(business_logic * this) {
+void business_logic_init(business_logic_t * this) {
 	gettimeofday(& this->time, NULL);
 	this->loadavg_ltime = this->time;
 	this->loadavg_period = 10;
@@ -43,7 +44,7 @@ void business_logic_init(business_logic * this) {
 	this->quit = 0;
 }
 
-void business_logic_code(business_logic * this, m2mp_client * client) {
+void business_logic_code(business_logic_t * this, m2mp_client * client) {
 	gettimeofday(& this->time, NULL);
 
 	if (this->time.tv_sec - this->loadavg_ltime.tv_sec > this->loadavg_period) {
@@ -63,7 +64,7 @@ void business_logic_code(business_logic * this, m2mp_client * client) {
 	}
 }
 
-business_logic buslog;
+business_logic_t buslog;
 
 void signal_handler(int s) {
 	printf("Caught signal %d\n", s);
@@ -92,13 +93,13 @@ int main(int argc, char** argv) {
 
 	// We load the settings management plugin
 	m2mp_client_settings * settingsPlugin = m2mp_client_settings_new(client);
-	
+
 	m2mp_client_commands * commandsPlugin = m2mp_client_commands_new(client);
-	int commandEventId = m2mp_client_event_commands_get_event_id( commandsPlugin );
+	int commandEventId = m2mp_client_event_commands_get_event_id(commandsPlugin);
 
 	// We load the two plugins into the M2MP client
-	
-	
+
+
 
 	// We load or generate or identifier
 	char * ident = m2mp_client_settings_get_value(settingsPlugin, "__ident");
@@ -134,9 +135,8 @@ int main(int argc, char** argv) {
 
 	while (loop) {
 
-		/*
-				LOG(LVL_DEBUG, "LOOP / nbNoEvents=%d", nbNoEvents );
-		 */
+		LOG(LVL_DEBUG, "LOOP / nbNoEvents=%d", nbNoEvents);
+
 		// We load some events from the library (or NULL if there's no event)
 		m2mp_client_event * event = m2mp_client_work(client, 4000);
 
@@ -171,12 +171,11 @@ int main(int argc, char** argv) {
 			} else if (event->type == M2MP_CLIENT_EVENT_ACK_RESPONSE) {
 				m2mp_client_event_ack_response * ackResponse = (m2mp_client_event_ack_response *) event;
 				LOG(LVL_NOTICE, "We received an ackResponse %d", ackResponse->ackNb);
-			} else if ( event->type == commandEventId ) {
+			} else if (event->type == commandEventId) {
 				m2mp_client_event_command * cmd = (m2mp_client_event_command*) event;
 				LOG(LVL_NOTICE, "We received a command: %s / %s", cmd->argv[0], cmd->cmdId);
-				m2mp_client_event_command_ack( event, commandsPlugin );
-			}
-			else {
+				m2mp_client_event_command_ack(event, commandsPlugin);
+			} else {
 				LOG(LVL_CRITICAL, "ERROR: Not handled: event->type = %d", event->type);
 			}
 
@@ -198,7 +197,7 @@ int main(int argc, char** argv) {
 	// We delete the two plugins
 	m2mp_client_files_delete(& filesPlugin);
 	m2mp_client_settings_delete(& settingsPlugin);
-	m2mp_client_commands_delete( commandsPlugin );
+	m2mp_client_commands_delete(commandsPlugin);
 
 	// We delete the client
 	m2mp_client_delete(& client);

@@ -31,7 +31,7 @@ extern "C" {
 
 #define DO_I_LOG( level ) level <= LOGGING_LEVEL
 
-	extern const char * LVL_TO_STRING[];
+extern const char * LVL_TO_STRING[];
 
 #define LOG( level, ... ) \
 if ( DO_I_LOG( level ) ) { \

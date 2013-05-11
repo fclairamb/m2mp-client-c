@@ -90,8 +90,9 @@ extern "C" {
 	 * Remove a dictionnary entry
      * @param this Instance of the dictionnary object 
      * @param name Key of the entry to remove
+	 * @return 0 if the object waw removed, 1 otherwize
      */
-	void dictionnary_rmv(dictionnary * this, const char * name);
+	unsigned char dictionnary_rmv(dictionnary * this, const char * name);
 
 #ifdef	__cplusplus
 }

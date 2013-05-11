@@ -17,7 +17,7 @@ m2mp_client_event ** m2mp_client_files_work(void * ptrClient, void * ptrThis, m2
 		return NULL;
 
 	//m2mp_client * client = (m2mp_client * ) ptrClient;
-	m2mp_client_files * this = (m2mp_client_files *) ptrThis;
+	//m2mp_client_files * this = (m2mp_client_files *) ptrThis;
 
 	// We never change the event chain
 	return NULL;

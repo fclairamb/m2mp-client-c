@@ -43,6 +43,13 @@ extern "C" {
 	 * This will also free each string within the array.
      */
 	void str_array_free(char ** array);
+	
+	/**
+	 * Append a string to an other string.
+     * @param str String to realloc and append to
+     * @param add String to append from
+     */
+	void str_append( char ** dest, const char * src);
 
 
 #ifdef	__cplusplus
