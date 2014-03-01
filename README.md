@@ -1,5 +1,7 @@
 # M2MP C client library
 
+[![Build Status](https://drone.io/github.com/fclairamb/m2mp-client-c/status.png)](https://drone.io/github.com/fclairamb/m2mp-client-c/latest)
+
 ## Introduction 
 This is a simple C implementation of M2MP protocol.
 
