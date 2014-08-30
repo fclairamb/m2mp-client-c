@@ -8,12 +8,15 @@
 #ifndef ARGS_H
 #define	ARGS_H
 
+#include <stdbool.h>
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
 	typedef struct {
 		int max_connected_time;
+		bool no_reconnect;
 	} args_t;
 
 

@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/sysinfo.h>
 #include "m2mp_client.h"
 #include "m2mp_client_settings.h"
 #include "m2mp_client_commands.h"
@@ -27,21 +28,31 @@ typedef struct st_business_logic {
 	time_t echo_time;
 	int echo_period;
 	int echo_counter;
-	
+
+	time_t uptime_time;
+	int uptime_period;
+
 	time_t connection_time;
 
 	bool quit;
-	
+
 	args_t args;
 } business_logic_t;
 
 void business_logic_init(business_logic_t * this) {
 	time_t now = time(NULL);
-	this->loadavg_time =  now;
-	this->loadavg_period = 10;
-	this->echo_time = now;
-	this->echo_period = 5;
+
+
+	this->loadavg_period = 60;
+	this->loadavg_time = now - this->loadavg_period;
+
+	this->echo_period = 10;
+	this->echo_time = now - this->echo_period;
 	this->echo_counter = 0;
+
+	this->uptime_period = 300;
+	this->uptime_time = now - this->uptime_period;
+
 	this->quit = false;
 	this->connection_time = 0;
 }
@@ -49,21 +60,31 @@ void business_logic_init(business_logic_t * this) {
 void free_time_to_think(business_logic_t * this, m2mp_client * client) {
 	time_t now = time(NULL);
 
-	if (now - this->loadavg_time > this->loadavg_period) {
+	if (now - this->loadavg_time >= this->loadavg_period) {
 		this->loadavg_time += this->loadavg_period;
 		double loadavg;
 		getloadavg(& loadavg, 1);
-		char result[256];
-		sprintf(result, "%3.2f", loadavg);
-		m2mp_client_send_string(client, "sen:loadavg", result);
+		char value[256];
+		sprintf(value, "%3.2f", loadavg);
+		m2mp_client_send_string(client, "sen:loadavg", value);
 	}
 
-	if (now - this->echo_time > this->echo_period) {
+	if (now - this->echo_time >= this->echo_period) {
 		this->echo_time += this->echo_period;
 		char content[256];
 		sprintf(content, "echo_%d", this->echo_counter++);
 		m2mp_client_send_string(client, "echo:test", content);
 	}
+
+	if (now - this->uptime_time >= this->uptime_period) {
+		this->uptime_time += this->uptime_period;
+		char value[256];
+		struct sysinfo info;
+		sysinfo(& info);
+		sprintf(value, "%ld", info.uptime);
+		m2mp_client_send_string(client, "sen:uptime", value);
+	}
+
 	if (this->connection_time && this->args.max_connected_time && now - this->connection_time > this->args.max_connected_time) {
 		LOG(LVL_NOTICE, "We've been connected for too long! Requesting disconnection...");
 		m2mp_client_send_string(client, "_special", "disconnect_me");
@@ -88,14 +109,14 @@ int main(int argc, char** argv) {
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, signal_handler);
 
-	
-		// We parse the parameters
-	
+
+	// We parse the parameters
+
 	args_parse(& buslog.args, argc, argv);
-	
+
 	// We create the M2MP client
 	m2mp_client * client = m2mp_client_new();
-	
+
 
 
 	// We load the settings management plugin
@@ -164,11 +185,17 @@ int main(int argc, char** argv) {
 				LOG(LVL_NOTICE, "We connected to %s:%d...", connected->serverHostname, connected->serverPort);
 			} else if (event->type == M2MP_CLIENT_EVENT_DISCONNECTED) {
 				LOG(LVL_NOTICE, "We were disconnected...");
-				if (!buslog.quit) {
-					LOG(LVL_NOTICE, "Waiting 30s...");
-					sleep(10);
-					LOG(LVL_NOTICE, "Reconnecting...");
-					m2mp_client_connect(client, client_hostname, client_port);
+				if (!buslog.quit) { // If we are not in quitting process
+					if ( buslog.args.no_reconnect ) { // And if we are not forbidden to reconnect
+						LOG(LVL_NOTICE, "We have to quit ! (--no-reconnect option)");
+						buslog.quit = true;
+					}
+					else { // We reconnect
+						LOG(LVL_NOTICE, "Waiting 30s...");
+						sleep(10);
+						LOG(LVL_NOTICE, "Reconnecting...");
+						m2mp_client_connect(client, client_hostname, client_port);
+					}
 				}
 			} else if (event->type == M2MP_CLIENT_EVENT_ACK_REQUEST) {
 				m2mp_client_event_ack_request * ackRequest = (m2mp_client_event_ack_request *) event;
@@ -181,9 +208,11 @@ int main(int argc, char** argv) {
 			} else if (event->type == commandEventId) {
 				m2mp_client_event_command * cmd = (m2mp_client_event_command*) event;
 				LOG(LVL_NOTICE, "We received a command: %s / %s", cmd->argv[0], cmd->cmdId);
-				if ( ! strcmp(cmd->argv[0], "shell") ) {
+				if (!strcmp(cmd->argv[0], "shell")) {
 					LOG(LVL_NOTICE, "Executing system(\"%s\");", cmd->argv[1]);
 					system(cmd->argv[1]);
+				} else if (!strcmp(cmd->argv[0], "restart")) {
+					system("/sbin/reboot");
 				}
 				m2mp_client_event_command_ack(event, commandsPlugin);
 			} else {

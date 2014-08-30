@@ -1046,7 +1046,7 @@ int m2mp_client_channels_get_id(m2mp_client * this, char * channels[256], const 
         if (!channels[i]) {
             if (firstEmpty == -1)
                 firstEmpty = i;
-            continue;
+            break;
         }
         if (!strcmp(channels[i], name))
             return i;

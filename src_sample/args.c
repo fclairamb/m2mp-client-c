@@ -20,6 +20,7 @@ static char doc[] = "\n"
 
 static struct argp_option options[] = {
 	{"max-connected-time", 'M', "SECONDS", 0, "Maximum connected time"},
+	{"no-reconnect", 'n', 0, 0, "Do not reconnect automatically"},
 	{}
 };
 
@@ -35,6 +36,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 	switch (key) {
 		case 'M':
 			args->max_connected_time = atoi(arg);
+			break;
+		case 'n':
+			args->no_reconnect = true;
 			break;
 		case ARGP_KEY_ARG:
 			LOG(LVL_NONE, "Arg: %s", arg);
