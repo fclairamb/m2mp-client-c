@@ -13,6 +13,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/sysinfo.h>
+#include <malloc.h>
 #include "m2mp_client.h"
 #include "m2mp_client_settings.h"
 #include "m2mp_client_commands.h"
@@ -21,7 +22,7 @@
 
 const char * capabilities_ [] = {"sensor", "echo", "c_client_sample", NULL};
 
-typedef struct st_business_logic {
+typedef struct {
 	time_t loadavg_time;
 	int loadavg_period;
 
@@ -37,6 +38,9 @@ typedef struct st_business_logic {
 	bool quit;
 
 	args_t args;
+
+	char **servers;
+	int server_index;
 } business_logic_t;
 
 void business_logic_init(business_logic_t * this) {
@@ -55,6 +59,40 @@ void business_logic_init(business_logic_t * this) {
 
 	this->quit = false;
 	this->connection_time = 0;
+
+	this->servers = NULL;
+	this->server_index = 0;
+}
+
+void business_logic_close(business_logic_t * this) {
+	if (this->servers) {
+
+		char ** ptr;
+
+		for (ptr = this->servers; *ptr; ptr++) {
+			free(*ptr);
+		}
+
+
+		free(this->servers);
+	}
+}
+
+int business_logic_connect( business_logic_t * this, m2mp_client * client ) {
+	char buffer[BUFSIZ];
+	char * server = this->servers[this->server_index++];
+	
+	if ( ! server ) {
+		this->server_index = 0;
+		server = this->servers[this->server_index++];
+	}
+	
+	strcpy( buffer, server );
+	
+	char * host = strtok(buffer, ":");
+	int port = atoi(strtok(NULL, ":"));
+	
+	return m2mp_client_connect( client, host, port );
 }
 
 void free_time_to_think(business_logic_t * this, m2mp_client * client) {
@@ -129,31 +167,46 @@ int main(int argc, char** argv) {
 
 
 
-	// We load or generate or identifier
-	char * ident = m2mp_client_settings_get_value(settingsPlugin, "__ident");
-	if (!ident) {
-		char buffer[1024];
-		srand(time(NULL));
-		sprintf(buffer, "Linux_%d_%d", (int) time(NULL), rand());
-		m2mp_client_settings_set_value(settingsPlugin, "__ident", buffer);
-		ident = m2mp_client_settings_get_value(settingsPlugin, "__ident");
-		m2mp_client_settings_save_if_necessary(settingsPlugin);
+	{// We load or generate or identifier
+		char * ident = m2mp_client_settings_get_value(settingsPlugin, "__ident");
+		if (!ident) {
+			char buffer[1024];
+			srand(time(NULL));
+			sprintf(buffer, "Linux_%d_%d", (int) time(NULL), rand());
+			m2mp_client_settings_set_value(settingsPlugin, "__ident", buffer);
+			ident = m2mp_client_settings_get_value(settingsPlugin, "__ident");
+			m2mp_client_settings_save_if_necessary(settingsPlugin);
+		}
+
+		// We define the ident
+		m2mp_client_set_ident(client, ident);
 	}
 
-	// We define the ident
-	m2mp_client_set_ident(client, ident);
+	{ // We load or create the list of servers
+		char * servers_values = m2mp_client_settings_get_value(settingsPlugin, "servers");
+		if (!servers_values) {
+			servers_values = "localhost:3010,localhost:3000";
+		}
+		char * alloc = strdup(servers_values);
+		char * tok;
+		int i = 0;
+		buslog.servers = malloc(sizeof (char *));
+		while ((tok = strtok(i ? NULL : alloc, ","))) {
+			buslog.servers = (char **) realloc(buslog.servers, sizeof (char *) * (i + 1));
+			buslog.servers[i++] = strdup(tok);
+		}
+		buslog.servers[i] = NULL;
+		free(alloc);
+	}
 
-	// We define the capacities of the equipment
+	// We define the capabilities of the equipment
 	m2mp_client_set_capabilities(client, capabilities_);
-
-	char * client_hostname = "localhost";
-	int client_port = 3000;
 
 	LOG(LVL_NOTICE, "M2MP Test client / M2MP Client v%s", m2mp_client_get_version());
 
 	// We init the socket we're going to use...
 	LOG(LVL_NOTICE, "Connecting...");
-	m2mp_client_connect(client, client_hostname, client_port);
+	business_logic_connect(&buslog, client);
 
 	while (!buslog.quit) {
 
@@ -190,10 +243,12 @@ int main(int argc, char** argv) {
 						LOG(LVL_NOTICE, "We have to quit ! (--no-reconnect option)");
 						buslog.quit = true;
 					} else { // We reconnect
-						LOG(LVL_NOTICE, "Waiting 30s...");
-						sleep(10);
+						if ( buslog.connection_time ) { // We only wait if we successfully connected once
+							LOG(LVL_NOTICE, "Waiting 30s...");
+							sleep(10);
+						}
 						LOG(LVL_NOTICE, "Reconnecting...");
-						m2mp_client_connect(client, client_hostname, client_port);
+						business_logic_connect(&buslog, client);
 					}
 				}
 			} else if (event->type == M2MP_CLIENT_EVENT_ACK_REQUEST) {
@@ -244,7 +299,9 @@ int main(int argc, char** argv) {
 
 	// We delete the client
 	m2mp_client_delete(& client);
-	assert(!client);
+	
+	// We delete the business logic allocated data
+	business_logic_close( & buslog );
 
 	return EXIT_SUCCESS;
 }
