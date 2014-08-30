@@ -15,7 +15,6 @@
 #include "m2mp_client_settings.h"
 #include "m2mp_client_commands.h"
 #include "logging.h"
-#include "memwatcher.h"
 
 const char * capabilities_ [] = {"sensor", "echo", "c_client_sample", NULL};
 
@@ -75,9 +74,6 @@ void signal_handler(int s) {
  */
 int main(int argc, char** argv) {
 
-	// Memwatcher (to detect memory leak without any external tool)
-	mw_init();
-
 	business_logic_init(& buslog);
 
 	signal(SIGINT, signal_handler);
@@ -114,7 +110,7 @@ int main(int argc, char** argv) {
 	// We define the capacities of the equipment
 	m2mp_client_set_capabilities(client, capabilities_);
 
-	char * client_hostname = "ovh3.webingenia.com";
+	char * client_hostname = "localhost";
 	int client_port = 3000;
 
 	LOG(LVL_NOTICE, "M2MP Test client / M2MP Client v%s", m2mp_client_get_version());
@@ -150,7 +146,7 @@ int main(int argc, char** argv) {
 
 				char * str = m2mp_client_event_data_get_string(data);
 				LOG(LVL_NOTICE, "Received on channel \"%s\" : \"%s\".", data->channelName, str);
-				mw_free(str);
+				free(str);
 			} else if (event->type == M2MP_CLIENT_EVENT_DATAARRAY) {
 				m2mp_client_event_dataarray * data_array = (m2mp_client_event_dataarray*) event;
 				LOG(LVL_NOTICE, "Received on channel \"%s\" : string[].", data_array->channelName);
@@ -197,11 +193,6 @@ int main(int argc, char** argv) {
 	// We delete the client
 	m2mp_client_delete(& client);
 	assert(!client);
-
-	// We stop the memwatcher and see if there's some unrelease memory
-	mw_end();
-
-	assert(!mw_size());
 
 	return EXIT_SUCCESS;
 }
