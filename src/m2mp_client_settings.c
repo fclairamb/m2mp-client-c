@@ -118,9 +118,10 @@ void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_cli
 
     if (getAll) {
         dictionnary_entry ** array = (dictionnary_entry **) dictionnary_get_all(& this->settings);
-        for (; array; array++) {
-            char * name = (*array)->name;
-            char * value = (*array)->value;
+		dictionnary_entry ** ptr = array;
+        for (; *ptr; ptr++) {
+            char * name = (*ptr)->name;
+            char * value = (*ptr)->value;
 
             size_t len = strlen(name) + strlen(value) + 2;
             char * sGetCell = (char *) mw_malloc(sizeof (char) * len);
