@@ -279,7 +279,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
 
     memset(&stSockAddr, 0, sizeof ( stSockAddr));
     stSockAddr.sin_family = AF_INET;
-    stSockAddr.sin_port = htons(3000);
+    stSockAddr.sin_port = htons(port);
 
     struct hostent * he;
 
