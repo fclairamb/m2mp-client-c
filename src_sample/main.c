@@ -186,6 +186,8 @@ int main(int argc, char** argv) {
 		char * servers_values = m2mp_client_settings_get_value(settingsPlugin, "servers");
 		if (!servers_values) {
 			servers_values = "localhost:3010,localhost:3000";
+			m2mp_client_settings_set_value(settingsPlugin, "servers", servers_values);
+			m2mp_client_settings_save_if_necessary(settingsPlugin);
 		}
 		char * alloc = strdup(servers_values);
 		char * tok;
