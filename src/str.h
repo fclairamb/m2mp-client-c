@@ -11,14 +11,7 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-	/**
-	 * Clone a string
-	 * @param str String to clone
-	 * @return Cloned string
-	 */
-	char * strdup(const char * str);
-
+	
 	/**
 	 * Clone an array of strings
      * @param array Source array of strings to clone

@@ -186,11 +186,10 @@ int main(int argc, char** argv) {
 			} else if (event->type == M2MP_CLIENT_EVENT_DISCONNECTED) {
 				LOG(LVL_NOTICE, "We were disconnected...");
 				if (!buslog.quit) { // If we are not in quitting process
-					if ( buslog.args.no_reconnect ) { // And if we are not forbidden to reconnect
+					if (buslog.args.no_reconnect) { // And if we are not forbidden to reconnect
 						LOG(LVL_NOTICE, "We have to quit ! (--no-reconnect option)");
 						buslog.quit = true;
-					}
-					else { // We reconnect
+					} else { // We reconnect
 						LOG(LVL_NOTICE, "Waiting 30s...");
 						sleep(10);
 						LOG(LVL_NOTICE, "Reconnecting...");
@@ -210,9 +209,19 @@ int main(int argc, char** argv) {
 				LOG(LVL_NOTICE, "We received a command: %s / %s", cmd->argv[0], cmd->cmdId);
 				if (!strcmp(cmd->argv[0], "shell")) {
 					LOG(LVL_NOTICE, "Executing system(\"%s\");", cmd->argv[1]);
-					system(cmd->argv[1]);
+					int err;
+					if ((err = system(cmd->argv[1]))) {
+						char buffer[BUFSIZ];
+						sprintf(buffer, "Error with system: %s", strerror(err));
+						m2mp_client_send_string(client, "sen:log", buffer);
+					}
 				} else if (!strcmp(cmd->argv[0], "restart")) {
-					system("/sbin/reboot");
+					int err;
+					if ((err = system("/sbin/reboot"))) {
+						char buffer[BUFSIZ];
+						sprintf(buffer, "Error with system: %s", strerror(err));
+						m2mp_client_send_string(client, "sen:log", buffer);
+					};
 				}
 				m2mp_client_event_command_ack(event, commandsPlugin);
 			} else {
