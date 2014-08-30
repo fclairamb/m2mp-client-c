@@ -1,5 +1,5 @@
 #include <string.h>
-#include "memwatcher.h"
+#include <stdlib.h>
 
 #include "str.h"
 
@@ -8,7 +8,7 @@ void str_append( char ** str, const char * add ) {
 	// We calculate the length of the destination string
 	int s1 = strlen( *str );
 	int s2 = strlen( add );
-	*str = mw_realloc( *str, sizeof(char) * (s1 + s2+1) );
+	*str = realloc( *str, sizeof(char) * (s1 + s2+1) );
 	memcpy( *str + (sizeof(char) * s1), add, s2+1 );
 }
 
@@ -30,7 +30,7 @@ char ** str_array_clone(const char ** array) {
     while (array[len])
         ++len;
 
-    char ** new_array = mw_malloc(sizeof (char *) * (len + 1));
+    char ** new_array = malloc(sizeof (char *) * (len + 1));
 
     int i;
     for (i = 0; i < len; ++i)
@@ -44,6 +44,6 @@ char ** str_array_clone(const char ** array) {
 void str_array_free(char ** array) {
     int i = 0;
     while (array[i])
-        mw_free(array[i++]);
-    mw_free(array);
+        free(array[i++]);
+    free(array);
 }

@@ -1,22 +1,21 @@
 
 
 #include "dictionnary.h"
-#include "memwatcher.h"
 #include "str.h"
 #include "m2mp_client_internal.h"
 
 
 dictionnary_entry * dictionnary_entry_new(const char * name, const char * value) {
-	dictionnary_entry * this = (dictionnary_entry *) mw_malloc(sizeof (dictionnary_entry));
+	dictionnary_entry * this = (dictionnary_entry *) malloc(sizeof (dictionnary_entry));
 	this->name = strdup(name);
 	this->value = strdup(value);
 	return this;
 }
 
 void dictionnary_entry_delete(dictionnary_entry * this) {
-	mw_free(this->name);
-	mw_free(this->value);
-	mw_free(this);
+	free(this->name);
+	free(this->value);
+	free(this);
 }
 
 void dictionnary_entry_delete_void(void * entry) {
@@ -24,7 +23,7 @@ void dictionnary_entry_delete_void(void * entry) {
 }
 
 dictionnary * dictionnary_new() {
-	dictionnary * dic = mw_malloc(sizeof ( dictionnary));
+	dictionnary * dic = malloc(sizeof ( dictionnary));
 	dictionnary_init(dic);
 	return dic;
 }
@@ -83,5 +82,5 @@ void dictionnary_clear(dictionnary* this) {
 
 void dictionnary_delete(dictionnary * this) {
 	dictionnary_clear(this);
-	mw_free(this);
+	free(this);
 }

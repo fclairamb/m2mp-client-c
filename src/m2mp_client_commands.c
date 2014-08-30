@@ -1,19 +1,18 @@
 #include "m2mp_client_commands.h"
-#include "memwatcher.h"
 #include "linkedlist.h"
 
 m2mp_client_event_command * m2mp_client_event_command_new(int typeId) {
-	m2mp_client_event_command * cmd= (m2mp_client_event_command *) mw_malloc(sizeof ( m2mp_client_event_command));
+	m2mp_client_event_command * cmd= (m2mp_client_event_command *) malloc(sizeof ( m2mp_client_event_command));
 	cmd->base.type = typeId;
 	return cmd;
 }
 
 void m2mp_client_commands_delete(m2mp_client_commands* this) {
-	mw_free(this);
+	free(this);
 }
 
 m2mp_client_commands * m2mp_client_commands_new(m2mp_client * client) {
-	m2mp_client_commands * this = (m2mp_client_commands*) mw_malloc(sizeof (m2mp_client_commands));
+	m2mp_client_commands * this = (m2mp_client_commands*) malloc(sizeof (m2mp_client_commands));
 	m2mp_client_commands_init(this, client);
 	return this;
 }
@@ -38,7 +37,7 @@ m2mp_client_event ** m2mp_client_commands_work(void* ptrClient, void* ptrThis, m
 			if (size > 2) {
 				char * type = m2mp_client_event_dataarray_get_string(eventDataArray, 0);
 				if (!strcmp(type, "e")) {
-					events = mw_malloc(sizeof ( m2mp_client_event *) * 3);
+					events = malloc(sizeof ( m2mp_client_event *) * 3);
 					// We keep the previous event
 					events[0] = event;
 
@@ -52,7 +51,7 @@ m2mp_client_event ** m2mp_client_commands_work(void* ptrClient, void* ptrThis, m
 
 					eventCmd->cmdId = m2mp_client_event_dataarray_get_string(eventDataArray, 1);
 					eventCmd->argc = eventDataArray->size - 2;
-					eventCmd->argv = (char **) mw_malloc(sizeof (char*) * (eventCmd->argc + 1));
+					eventCmd->argv = (char **) malloc(sizeof (char*) * (eventCmd->argc + 1));
 					eventCmd->argv[eventCmd->argc ] = NULL;
 					{
 						int i = 0;
@@ -61,7 +60,7 @@ m2mp_client_event ** m2mp_client_commands_work(void* ptrClient, void* ptrThis, m
 						}
 					}
 				}
-				mw_free(type);
+				free(type);
 			}
 		}
 	}
@@ -71,13 +70,13 @@ m2mp_client_event ** m2mp_client_commands_work(void* ptrClient, void* ptrThis, m
 
 void m2mp_client_event_command_delete(m2mp_client_event* e) {
 	m2mp_client_event_command * event = (m2mp_client_event_command*) e;
-	mw_free(event->cmdId);
+	free(event->cmdId);
 	int i;
 	for (i = 0; i < event->argc; i++) {
-		mw_free(event->argv[i]);
+		free(event->argv[i]);
 	}
-	mw_free(event->argv);
-	mw_free(event);
+	free(event->argv);
+	free(event);
 }
 
 int m2mp_client_event_commands_get_event_id(m2mp_client_commands * cmds) {
@@ -95,6 +94,6 @@ void m2mp_client_event_command_ack( m2mp_client_event *event, m2mp_client_comman
 	
 	const char ** argv = (const char **) linkedlist_get_array( list );
 	m2mp_client_send_string_array( plugin->client, "_cmd", argv );
-	mw_free( argv );
+	free( argv );
 	linkedlist_delete(& list );
 }

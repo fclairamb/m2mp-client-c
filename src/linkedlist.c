@@ -6,7 +6,6 @@
  */
 
 #include "linkedlist.h"
-#include "memwatcher.h"
 
 // Linkedlist cannot use memwatcher because the memwatcher relies on the linkedlist
 // to store all the pointers.
@@ -15,8 +14,6 @@ linkedlist * linkedlist_new() {
     linkedlist * this = (linkedlist *) malloc(sizeof (linkedlist));
 
     linkedlist_init(this);
-
-    mw_add( this, __FILE__, __LINE__, __FUNCTION__ );
 
     return this;
 }
@@ -46,8 +43,6 @@ void linkedlist_empty(linkedlist * this, void (*deleter)(void * elt)) {
 }
 
 void linkedlist_delete(linkedlist** this) {
-    mw_rmv( * this );
-
     linkedlist_empty(*this, NULL);
     free(* this);
     *this = NULL;
@@ -112,7 +107,7 @@ void * linkedlist_pop_last(linkedlist* this) {
 
 void ** linkedlist_get_array(linkedlist* this) {
     // This doesn't have to be the real malloc as it's not necessary for the linkedlist management
-    void ** nodes = (void **) mw_malloc(sizeof (void*) * (this->size + 1));
+    void ** nodes = (void **) malloc(sizeof (void*) * (this->size + 1));
 
     int size = this->size;
 

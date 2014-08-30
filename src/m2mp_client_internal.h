@@ -18,7 +18,6 @@ extern "C" {
 
 #include "linkedlist.h"
 #include "dictionnary.h"
-#include "memwatcher.h"
 #include "m2mp_client_types.h"
 
     /** BYTE type */

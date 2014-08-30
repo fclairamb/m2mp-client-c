@@ -11,11 +11,10 @@
 #include "m2mp_client_settings.h"
 #include "m2mp_client_internal.h"
 #include "str.h"
-#include "memwatcher.h"
 
 
 m2mp_client_settings * m2mp_client_settings_new(m2mp_client * client) {
-    m2mp_client_settings * this = (m2mp_client_settings *) mw_malloc(sizeof (m2mp_client_settings));
+    m2mp_client_settings * this = (m2mp_client_settings *) malloc(sizeof (m2mp_client_settings));
 
     m2mp_client_settings_init(this, client);
 
@@ -37,14 +36,14 @@ void m2mp_client_settings_delete(m2mp_client_settings ** pThis) {
 
 	dictionnary_clear( & this->settings );
 
-    mw_free(this);
+    free(this);
     *pThis = NULL;
 }
 
 void m2mp_client_settings_treat_data(m2mp_client_settings * this, m2mp_client_event_data *dataEvent) {
     char * str = m2mp_client_event_data_get_string(dataEvent);
     LOG(LVL_DEBUG, "data = \"%s\"", str);
-    mw_free(str);
+    free(str);
 }
 
 void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_client_event_dataarray *dataArrayEvent) {
@@ -69,7 +68,7 @@ void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_cli
             getAll = TRUE;
         }
 
-        mw_free(sFirstCell);
+        free(sFirstCell);
     }
 
     linkedlist * getCellsList = NULL;
@@ -106,14 +105,14 @@ void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_cli
                 char * value = m2mp_client_settings_get_value(this, name);
                 if (value) {
                     size_t len = strlen(name) + strlen(value) + 2;
-                    char * sGetCell = (char *) mw_malloc(sizeof (char) * len);
+                    char * sGetCell = (char *) malloc(sizeof (char) * len);
                     sprintf(sGetCell, "%s=%s", name, value);
                     linkedlist_insert_last(getCellsList, sGetCell);
                 }
             }
         }
 
-        mw_free(sCell);
+        free(sCell);
     }
 
     if (getAll) {
@@ -124,12 +123,12 @@ void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_cli
             char * value = (*ptr)->value;
 
             size_t len = strlen(name) + strlen(value) + 2;
-            char * sGetCell = (char *) mw_malloc(sizeof (char) * len);
+            char * sGetCell = (char *) malloc(sizeof (char) * len);
             sprintf(sGetCell, "%s=%s", name, value);
             
             linkedlist_insert_last(getCellsList, sGetCell);
         }
-        mw_free( array );
+        free( array );
     }
 
     if (getCellsList != NULL) {
@@ -139,9 +138,9 @@ void m2mp_client_settings_treat_data_array(m2mp_client_settings * this, m2mp_cli
 
         m2mp_client_send_string_array(this->client, "_set", (const char **) getCellsStrArray);
 
-        mw_free(getCellsStrArray);
+        free(getCellsStrArray);
 
-        linkedlist_empty(getCellsList, mw_free);
+        linkedlist_empty(getCellsList, free);
         //mw_rmv(getCellsList);
         linkedlist_delete(& getCellsList);
     }
@@ -212,7 +211,7 @@ void m2mp_client_settings_show_entries(m2mp_client_settings * this) {
 		entries++;
     }
 
-    mw_free(ptrToFree);
+    free(ptrToFree);
 }
 
 void m2mp_client_settings_save(m2mp_client_settings* this) {
@@ -231,7 +230,7 @@ void m2mp_client_settings_save(m2mp_client_settings* this) {
         i++;
     }
 
-    mw_free(entries);
+    free(entries);
 
     fclose(fp);
 
@@ -241,7 +240,7 @@ void m2mp_client_settings_save(m2mp_client_settings* this) {
 void m2mp_client_settings_load(m2mp_client_settings* this) {
     LOG(LVL_DEBUG, "m2mp_client_settings_load();");
     size_t bufferSize = 1024;
-    char * buffer = mw_malloc(sizeof ( char) * (bufferSize + 1));
+    char * buffer = malloc(sizeof ( char) * (bufferSize + 1));
 
     // We empty everything that could exist
 	// linkedlist_empty(& this->settings, settings_entry_delete_void);
@@ -274,7 +273,7 @@ void m2mp_client_settings_load(m2mp_client_settings* this) {
 
     fclose(fp);
 
-    mw_free(buffer);
+    free(buffer);
 
     m2mp_client_settings_show_entries(this);
 }

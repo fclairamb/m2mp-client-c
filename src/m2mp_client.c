@@ -1,6 +1,5 @@
 #include "m2mp_client_internal.h"
 #include "dictionnary.h"
-#include "memwatcher.h"
 #include "str.h"
 
 // Standard things
@@ -21,7 +20,7 @@
 #define M2MP_CLIENT_VERSION "0.1.0"
 
 m2mp_client_status_entry * m2mp_client_status_entry_new( const char * name, const char * value ) {
-	m2mp_client_status_entry * entry = mw_malloc( sizeof(m2mp_client_status_entry ) );
+	m2mp_client_status_entry * entry = malloc( sizeof(m2mp_client_status_entry ) );
 	
 	entry->name = strdup( name );
 	entry->value = strdup( value );
@@ -30,8 +29,8 @@ m2mp_client_status_entry * m2mp_client_status_entry_new( const char * name, cons
 }
 
 void m2mp_client_status_entry_delete( m2mp_client_status_entry * entry ) {
-	mw_free( entry->name );
-	mw_free( entry->value );
+	free( entry->name );
+	free( entry->value );
 }
 
 void m2mp_client_status_entry_delete_void( void * entry ) {
@@ -42,7 +41,7 @@ void m2mp_client_status_entry_delete_void( void * entry ) {
 
 m2mp_client * m2mp_client_new() {
     LOG( LVL_DEBUG, "m2mp_client_new();");
-    m2mp_client * this = mw_malloc(sizeof ( m2mp_client));
+    m2mp_client * this = malloc(sizeof ( m2mp_client));
 
     m2mp_client_init(this);
 
@@ -55,9 +54,9 @@ char * m2mp_client_get_version() {
 
 void m2mp_client_set_ident(m2mp_client* this, const char* ident) {
     if ( this->ident )
-        mw_free( this->ident );
+        free( this->ident );
 
-    char * ident_copy = (char *) mw_malloc(strlen(ident) + 1);
+    char * ident_copy = (char *) malloc(strlen(ident) + 1);
     strcpy(ident_copy, ident);
     this->ident = ident_copy;
 }
@@ -66,7 +65,7 @@ void m2mp_client_set_capabilities(m2mp_client * this, const char ** capabilities
 	const char * sep = ",";
 	char * value = str_array_implode(capabilities, sep);
 	m2mp_client_set_status(this, "cap", value );
-	mw_free( value );
+	free( value );
 }
 
 void m2mp_client_set_status( m2mp_client * this, const char * name, const char * value ) {
@@ -90,25 +89,25 @@ void m2mp_client_event_delete(m2mp_client * this /* = NULL */, m2mp_client_event
 
         case M2MP_CLIENT_EVENT_DATA: {
             m2mp_client_event_data * eventData = (m2mp_client_event_data *) event;
-            mw_free( eventData->channelName );
-            mw_free( eventData->data );
+            free( eventData->channelName );
+            free( eventData->data );
             break;
         }
 
         case M2MP_CLIENT_EVENT_DATAARRAY: {
             m2mp_client_event_dataarray * eventDataArray = (m2mp_client_event_dataarray *) event;
             int i = 0;
-            mw_free( eventDataArray->channelName );
+            free( eventDataArray->channelName );
             for( i = 0; eventDataArray->data[i]; ++i )
-                mw_free( eventDataArray->data[i] );
-            mw_free( eventDataArray->data );
-            mw_free( eventDataArray->lengths );
+                free( eventDataArray->data[i] );
+            free( eventDataArray->data );
+            free( eventDataArray->lengths );
             break;
         }
 
         case M2MP_CLIENT_EVENT_CONNECTED: {
             m2mp_client_event_connected * eventConnected = (m2mp_client_event_connected *) event;
-            mw_free( eventConnected->serverHostname );
+            free( eventConnected->serverHostname );
         }
             break;
         case M2MP_CLIENT_EVENT_IDENTIFIED_RESPONSE:
@@ -127,7 +126,7 @@ void m2mp_client_event_delete(m2mp_client * this /* = NULL */, m2mp_client_event
 			}
     }
 
-    mw_free( event );
+    free( event );
 }
 
 void m2mp_client_delete(m2mp_client ** pThis) {
@@ -137,33 +136,33 @@ void m2mp_client_delete(m2mp_client ** pThis) {
 
         m2mp_client_disconnect(this);
 
-        // We mw_free the channels
+        // We free the channels
         m2mp_client_channels_free(this->recvChannels);
         m2mp_client_channels_free(this->sendChannels);
 
-        // We mw_free the receiving buffer
+        // We free the receiving buffer
         if (this->recvBuffer)
-            mw_free(this->recvBuffer);
+            free(this->recvBuffer);
 
-        // We mw_free the sending buffer
+        // We free the sending buffer
         if (this->sendBuffer)
-            mw_free(this->sendBuffer);
+            free(this->sendBuffer);
 
         if ( this->ident )
-            mw_free( this->ident );
+            free( this->ident );
 
         linkedlist_empty( & this->events, m2mp_client_event_delete_void );
 
 		dictionnary_clear( & this->statuses );
 		
-        linkedlist_empty( & this->pluginsLinkedList, mw_free );
+        linkedlist_empty( & this->pluginsLinkedList, free );
 
         if ( this->pluginsArray )
-            mw_free( this->pluginsArray );
+            free( this->pluginsArray );
 		
-		mw_free( this->event_destructors );
+		free( this->event_destructors );
 		
-        mw_free(this);
+        free(this);
         *pThis = NULL;
     }
 }
@@ -270,7 +269,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
     if (this->socketFD == -1) {
         LOG( LVL_CRITICAL,"ERROR: Cannot create socket");
 
-        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
         event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
         m2mp_client_add_event(this, (m2mp_client_event *) event);
 
@@ -287,7 +286,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
         LOG( LVL_CRITICAL,"ERROR: Host could not be resolved.");
         this->socketFD = -1;
 
-        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
         event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
         m2mp_client_add_event(this, (m2mp_client_event *) event);
 
@@ -317,7 +316,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
         close(this->socketFD);
         this->socketFD = -1;
 
-        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
         event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
         m2mp_client_add_event(this, (m2mp_client_event *) event);
 
@@ -333,7 +332,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
         close(this->socketFD);
         this->socketFD = -1;
 
-        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
         event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
         m2mp_client_add_event(this, (m2mp_client_event *) event);
 
@@ -348,7 +347,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
     this->socketPollFDs.events = POLLIN | POLLPRI | POLLERR | POLLHUP;
 
     { // We create the connected event
-        m2mp_client_event_connected * event = (m2mp_client_event_connected *) mw_malloc( sizeof(m2mp_client_event_connected) );
+        m2mp_client_event_connected * event = (m2mp_client_event_connected *) malloc( sizeof(m2mp_client_event_connected) );
         event->base.type = M2MP_CLIENT_EVENT_CONNECTED;
         event->serverHostname = strdup( hostname );
         event->serverPort = port;
@@ -506,7 +505,7 @@ void m2mp_client_send_data_array(m2mp_client* this, const char* channel_name, co
 
     LOG(LVL_DEBUG, "messageSize: %d, totalSize: %d", (int) messageSize, (int) totalSize);
 
-    BYTE * frame = mw_malloc(sizeof (BYTE) * totalSize);
+    BYTE * frame = malloc(sizeof (BYTE) * totalSize);
     size_t offset = 0;
 
     frame[offset++] = frameType;
@@ -554,7 +553,7 @@ void m2mp_client_send_data_array(m2mp_client* this, const char* channel_name, co
     m2mp_client_net_send(this, frame, offset);
 
     // In the end, we just release the generated frame
-    mw_free(frame);
+    free(frame);
 }
 
 void m2mp_client_net_send(m2mp_client * this, BYTE * data, size_t length) {
@@ -580,7 +579,7 @@ int m2mp_client_net_receive(m2mp_client * this, int size, int timeout /* = 500 *
     if (rv == -1) {
         LOG(LVL_CRITICAL, "ERROR: poll error.");
 
-        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
         event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
         m2mp_client_add_event(this, (m2mp_client_event *) event);
     } else if (rv == 0) {
@@ -599,13 +598,13 @@ int m2mp_client_net_receive(m2mp_client * this, int size, int timeout /* = 500 *
             } else if (bytesReceived < 0) {
                 LOG(LVL_CRITICAL, "ERROR: Socket error !");
 
-                m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+                m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
                 event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
                 m2mp_client_add_event(this, (m2mp_client_event *) event);
             } else if (bytesReceived == 0) {
                 LOG(LVL_NOTICE, "ERROR: Socket disconnected !");
 
-                m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) mw_malloc(sizeof ( m2mp_client_event_disconnected));
+                m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
                 event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
                 m2mp_client_add_event(this, (m2mp_client_event *) event);
             }
@@ -729,39 +728,39 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
     
     if (data[0] == PROT_R_IDENT_RESULT) {
         this->state = M2MP_CLIENT_STATE_IDENTIFIED;
-        m2mp_client_event_identified * event = (m2mp_client_event_identified *) mw_malloc(sizeof ( m2mp_client_event_identified));
+        m2mp_client_event_identified * event = (m2mp_client_event_identified *) malloc(sizeof ( m2mp_client_event_identified));
         event->base.type = M2MP_CLIENT_EVENT_IDENTIFIED_RESPONSE;
         event->status = data[1];
         m2mp_client_add_event(this, (m2mp_client_event*) event);
     } else if (data[0] == PROT_R_NC_DATA) {
-        m2mp_client_event_data * event = (m2mp_client_event_data *) mw_malloc(sizeof (m2mp_client_event_data));
+        m2mp_client_event_data * event = (m2mp_client_event_data *) malloc(sizeof (m2mp_client_event_data));
         event->base.type = M2MP_CLIENT_EVENT_DATA;
         event->length = (data[1] - 1);
         event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[2]));
-        event->data = (BYTE *) mw_malloc(sizeof (BYTE) * event->length);
+        event->data = (BYTE *) malloc(sizeof (BYTE) * event->length);
         memcpy(event->data, & data[3], event->length);
         m2mp_client_add_event(this, (m2mp_client_event*) event);
     } else if (data[0] == PROT_R_NC_DATA_LARGE) {
-        m2mp_client_event_data *event = (m2mp_client_event_data *) mw_malloc(sizeof (m2mp_client_event_data));
+        m2mp_client_event_data *event = (m2mp_client_event_data *) malloc(sizeof (m2mp_client_event_data));
         event->base.type = M2MP_CLIENT_EVENT_DATA;
         event->length = (size_t) le16toh(&data[1]) - 1;
         event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[3]));
-        event->data = (BYTE *) mw_malloc(sizeof (BYTE) * event->length);
+        event->data = (BYTE *) malloc(sizeof (BYTE) * event->length);
         memcpy(event->data, & data[4], event->length);
         m2mp_client_add_event(this, (m2mp_client_event*) event);
     } else if (data[0] == PROT_R_NC_DATA_VERYLARGE) {
-        m2mp_client_event_data * event = (m2mp_client_event_data *) mw_malloc(sizeof (m2mp_client_event_data));
+        m2mp_client_event_data * event = (m2mp_client_event_data *) malloc(sizeof (m2mp_client_event_data));
         event->base.type = M2MP_CLIENT_EVENT_DATA;
         event->length = (size_t) le32toh(&data[1]) - 1;
         event->channelName = strdup(m2mp_client_channels_get_name(this->recvChannels, (int) data[5]));
-        event->data = (BYTE *) mw_malloc(sizeof (BYTE) * event->length);
+        event->data = (BYTE *) malloc(sizeof (BYTE) * event->length);
         memcpy(event->data, &data[6], event->length);
         m2mp_client_add_event(this, (m2mp_client_event*) event);
     } else if (
             data[0] == PROT_R_NC_DATAARRAY ||
             data[0] == PROT_R_NC_DATAARRAY_LARGE ||
             data[0] == PROT_R_NC_DATAARRAY_VERYLARGE) {
-        m2mp_client_event_dataarray * event = (m2mp_client_event_dataarray *) mw_malloc(sizeof (m2mp_client_event_dataarray));
+        m2mp_client_event_dataarray * event = (m2mp_client_event_dataarray *) malloc(sizeof (m2mp_client_event_dataarray));
         event->base.type = M2MP_CLIENT_EVENT_DATAARRAY;
 
         linkedlist listLength, listData;
@@ -784,7 +783,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
                 //LOG( LVL_DEBUG, "length = %d", length );
                 offset += 1;
 
-                BYTE * subData = (BYTE *) mw_malloc(sizeof (BYTE) * length);
+                BYTE * subData = (BYTE *) malloc(sizeof (BYTE) * length);
                 memcpy(subData, & data[ offset ], length);
                 linkedlist_insert_last(& listData, (void *) subData);
                 offset += length;
@@ -801,7 +800,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
                 //LOG( LVL_DEBUG, "length = %d", length );
                 offset += sizeof (uint16_t);
 
-                BYTE * subData = (BYTE *) mw_malloc(sizeof (BYTE) * length);
+                BYTE * subData = (BYTE *) malloc(sizeof (BYTE) * length);
                 memcpy(subData, & data[ offset ], length);
                 linkedlist_insert_last(& listData, (void *) subData);
                 offset += length;
@@ -818,7 +817,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
                 //LOG( LVL_DEBUG, "length = %d", length );
                 offset += sizeof (uint32_t);
 
-                BYTE * subData = (BYTE *) mw_malloc(sizeof (BYTE) * length);
+                BYTE * subData = (BYTE *) malloc(sizeof (BYTE) * length);
                 memcpy(subData, & data[ offset ], length);
                 linkedlist_insert_last(& listData, (void *) subData);
                 offset += length;
@@ -826,8 +825,8 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
         }
 
         size_t size = linkedlist_get_size(& listLength);
-        size_t * lengths = (size_t *) mw_malloc(sizeof (size_t) * size);
-        BYTE ** dataArray = (BYTE **) mw_malloc(sizeof (BYTE *) * (size + 1));
+        size_t * lengths = (size_t *) malloc(sizeof (size_t) * size);
+        BYTE ** dataArray = (BYTE **) malloc(sizeof (BYTE *) * (size + 1));
 
         int i;
         for (i = 0; i < size; ++i) {
@@ -846,7 +845,7 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
         linkedlist_empty(& listData, NULL);
     } else if (data[0] == PROT_R_NC_DEF) {
         size_t len = data[1];
-        char * channelName = mw_malloc(sizeof (char) * len);
+        char * channelName = malloc(sizeof (char) * len);
         memcpy(channelName, & data[3], len - 1);
         channelName[ (len - 1) ] = '\0';
 
@@ -854,14 +853,14 @@ int m2mp_client_treat_frame(m2mp_client* this, BYTE* data, size_t length) {
 
         m2mp_client_channels_set_id_and_name(this->recvChannels, data[2], channelName);
 
-        mw_free(channelName);
+        free(channelName);
     } else if (data[0] == PROT_R_ACK_REQUEST) {
-        m2mp_client_event_ack_request * event = (m2mp_client_event_ack_request*) mw_malloc(sizeof ( m2mp_client_event_ack_request));
+        m2mp_client_event_ack_request * event = (m2mp_client_event_ack_request*) malloc(sizeof ( m2mp_client_event_ack_request));
         event->base.type = M2MP_CLIENT_EVENT_ACK_REQUEST;
         event->ackNb = data[1];
         m2mp_client_add_event(this, (m2mp_client_event *) event);
     } else if (data[0] == PROT_R_ACK_RESPONSE) {
-        m2mp_client_event_ack_response * event = (m2mp_client_event_ack_response*) mw_malloc(sizeof ( m2mp_client_event_ack_response));
+        m2mp_client_event_ack_response * event = (m2mp_client_event_ack_response*) malloc(sizeof ( m2mp_client_event_ack_response));
         event->base.type = M2MP_CLIENT_EVENT_ACK_RESPONSE;
         event->ackNb = data[1];
         m2mp_client_add_event(this, (m2mp_client_event *) event);
@@ -912,7 +911,7 @@ m2mp_client_event * m2mp_client_work(m2mp_client * this, int timeout /* = 500 */
 						str_append(&returned,value);
 						const char *tab[] =  { "g", returned, NULL };
 						m2mp_client_send_string_array( this, "_sta", tab );
-						mw_free( returned );
+						free( returned );
 					}
 					else {
 						const char * tab[] = { "g", NULL };
@@ -978,18 +977,18 @@ void m2mp_client_debug_render_bytes(BYTE * data, size_t length) {
 void m2mp_client_prepare_send_buffer(m2mp_client* this, size_t size) {
     if (this->sendBufferSize < size){
     if (this->sendBuffer)
-        this->sendBuffer = mw_realloc(this->sendBuffer, size);
+        this->sendBuffer = realloc(this->sendBuffer, size);
     else
-        this->sendBuffer = mw_malloc(size);
+        this->sendBuffer = malloc(size);
 	}
 }
 
 void m2mp_client_prepare_recv_buffer(m2mp_client* this, size_t size) {
     if (this->recvBufferSize < size) {
         if (this->recvBuffer)
-            this->recvBuffer = mw_realloc(this->recvBuffer, size);
+            this->recvBuffer = realloc(this->recvBuffer, size);
         else
-            this->recvBuffer = mw_malloc(size);
+            this->recvBuffer = malloc(size);
     }
 }
 
@@ -1006,7 +1005,7 @@ void m2mp_client_send_string_array(m2mp_client* this, const char* channel_name, 
         ;
 
     LOG(LVL_VERBOSE, "strings_count=%d", (int) strings_count);
-    size_t * lengths = (size_t *) mw_malloc(sizeof (size_t) * strings_count);
+    size_t * lengths = (size_t *) malloc(sizeof (size_t) * strings_count);
 
     int i;
     for (i = 0; strings[i]; ++i)
@@ -1014,7 +1013,7 @@ void m2mp_client_send_string_array(m2mp_client* this, const char* channel_name, 
 
     m2mp_client_send_data_array(this, channel_name, (const BYTE **) strings, lengths);
 
-    mw_free(lengths);
+    free(lengths);
 }
 
 char * m2mp_client_channels_get_name(char * channels[256], const unsigned char id) {
@@ -1030,7 +1029,7 @@ void m2mp_client_channels_set_id_and_name(char * channels[256], const unsigned c
     LOG(LVL_DEBUG, "m2mp_client_channels_set_id_and_name( [...], %d, \"%s\" );", id, name);
 
     if (channels[id])
-        mw_free(channels[id]);
+        free(channels[id]);
 
     channels[id] = strdup(name);
 }
@@ -1087,14 +1086,14 @@ void m2mp_client_channels_free(char * channels[256]) {
 
     for (i = 0; i < 256; ++i) {
         if (channels[i]) {
-            mw_free(channels[i]);
+            free(channels[i]);
             channels[i] = NULL;
         }
     }
 }
 
 char * m2mp_client_event_data_get_string(m2mp_client_event_data * this) {
-    char * str = (char *) mw_malloc(sizeof (char) * (this->length + 1));
+    char * str = (char *) malloc(sizeof (char) * (this->length + 1));
 
     memcpy(str, this->data, this->length);
 
@@ -1106,7 +1105,7 @@ char * m2mp_client_event_data_get_string(m2mp_client_event_data * this) {
 char * m2mp_client_event_dataarray_get_string(m2mp_client_event_dataarray * this, int i) {
     size_t length = this->lengths[i];
 
-    char * str = (char *) mw_malloc(sizeof (char) * (length + 1));
+    char * str = (char *) malloc(sizeof (char) * (length + 1));
 
     memcpy(str, this->data[i], length);
 
@@ -1116,7 +1115,7 @@ char * m2mp_client_event_dataarray_get_string(m2mp_client_event_dataarray * this
 }
 
 void m2mp_client_add_plugin(m2mp_client * this, void * instance, m2mp_client_event ** (*func)(void * clientInstance, void * pluginInstance, m2mp_client_event * event)) {
-    m2mp_client_plugin_entry * entry = (m2mp_client_plugin_entry *) mw_malloc(sizeof (m2mp_client_plugin_entry));
+    m2mp_client_plugin_entry * entry = (m2mp_client_plugin_entry *) malloc(sizeof (m2mp_client_plugin_entry));
     entry->pluginInstance = instance;
     entry->func = func;
 
@@ -1139,7 +1138,7 @@ void m2mp_client_rmv_plugin(m2mp_client* this, void* instance) {
             linkedlist_remove(& this->pluginsLinkedList, entry);
 
             // And we delete the m2mp_client_plugin_entry
-            mw_free(entry);
+            free(entry);
             return;
         }
 
@@ -1151,7 +1150,7 @@ void m2mp_client_rmv_plugin(m2mp_client* this, void* instance) {
 
 void m2mp_client_update_plugin_array(m2mp_client* this) {
     if (this->pluginsArray)
-        mw_free(this->pluginsArray);
+        free(this->pluginsArray);
 
     this->pluginsArray = (m2mp_client_plugin_entry **) linkedlist_get_array(& this->pluginsLinkedList);
     //mw_add(this->pluginsArray, __FILE__, __LINE__, __FUNCTION__);
