@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
@@ -15,38 +16,41 @@
 #include "m2mp_client_settings.h"
 #include "m2mp_client_commands.h"
 #include "logging.h"
+#include "args.h"
 
 const char * capabilities_ [] = {"sensor", "echo", "c_client_sample", NULL};
 
 typedef struct st_business_logic {
-	struct timeval time;
-
-	struct timeval loadavg_ltime;
+	time_t loadavg_time;
 	int loadavg_period;
 
-	struct timeval echo_ltime;
+	time_t echo_time;
 	int echo_period;
-
 	int echo_counter;
+	
+	time_t connection_time;
 
-	unsigned char quit;
+	bool quit;
+	
+	args_t args;
 } business_logic_t;
 
 void business_logic_init(business_logic_t * this) {
-	gettimeofday(& this->time, NULL);
-	this->loadavg_ltime = this->time;
+	time_t now = time(NULL);
+	this->loadavg_time =  now;
 	this->loadavg_period = 10;
-	this->echo_ltime = this->time;
+	this->echo_time = now;
 	this->echo_period = 5;
 	this->echo_counter = 0;
-	this->quit = 0;
+	this->quit = false;
+	this->connection_time = 0;
 }
 
-void business_logic_code(business_logic_t * this, m2mp_client * client) {
-	gettimeofday(& this->time, NULL);
+void free_time_to_think(business_logic_t * this, m2mp_client * client) {
+	time_t now = time(NULL);
 
-	if (this->time.tv_sec - this->loadavg_ltime.tv_sec > this->loadavg_period) {
-		this->loadavg_ltime.tv_sec += this->loadavg_period;
+	if (now - this->loadavg_time > this->loadavg_period) {
+		this->loadavg_time += this->loadavg_period;
 		double loadavg;
 		getloadavg(& loadavg, 1);
 		char result[256];
@@ -54,18 +58,23 @@ void business_logic_code(business_logic_t * this, m2mp_client * client) {
 		m2mp_client_send_string(client, "sen:loadavg", result);
 	}
 
-	if (this->time.tv_sec - this->echo_ltime.tv_sec > this->echo_period) {
-		this->echo_ltime.tv_sec += this->echo_period;
+	if (now - this->echo_time > this->echo_period) {
+		this->echo_time += this->echo_period;
 		char content[256];
 		sprintf(content, "echo_%d", this->echo_counter++);
 		m2mp_client_send_string(client, "echo:test", content);
+	}
+	if (this->connection_time && this->args.max_connected_time && now - this->connection_time > this->args.max_connected_time) {
+		LOG(LVL_NOTICE, "We've been connected for too long! Requesting disconnection...");
+		m2mp_client_send_string(client, "_special", "disconnect_me");
+		this->connection_time = 0;
 	}
 }
 
 business_logic_t buslog;
 
 void signal_handler(int s) {
-	printf("Caught signal %d\n", s);
+	printf("Caught signal %s (%d)\n", strsignal(s), s);
 	buslog.quit = 1;
 }
 
@@ -79,9 +88,15 @@ int main(int argc, char** argv) {
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, signal_handler);
 
+	
+		// We parse the parameters
+	
+	args_parse(& buslog.args, argc, argv);
+	
 	// We create the M2MP client
 	m2mp_client * client = m2mp_client_new();
-	assert(client);
+	
+
 
 	// We load the settings management plugin
 	m2mp_client_settings * settingsPlugin = m2mp_client_settings_new(client);
@@ -119,15 +134,7 @@ int main(int argc, char** argv) {
 	LOG(LVL_NOTICE, "Connecting...");
 	m2mp_client_connect(client, client_hostname, client_port);
 
-
-
-	unsigned char loop = 1;
-
-	unsigned int nbNoEvents = 0;
-
-	while (loop) {
-
-		LOG(LVL_DEBUG, "LOOP / nbNoEvents=%d", nbNoEvents);
+	while (!buslog.quit) {
 
 		// We load some events from the library (or NULL if there's no event)
 		m2mp_client_event * event = m2mp_client_work(client, 4000);
@@ -138,8 +145,10 @@ int main(int argc, char** argv) {
 
 				if (identResult->status) {
 					LOG(LVL_NOTICE, "We are identified !");
+					buslog.connection_time = time(NULL);
 				} else {
 					LOG(LVL_NOTICE, "We are not identified !");
+					m2mp_client_disconnect(client);
 				}
 			} else if (event->type == M2MP_CLIENT_EVENT_DATA) {
 				m2mp_client_event_data * data = (m2mp_client_event_data *) event;
@@ -155,30 +164,35 @@ int main(int argc, char** argv) {
 				LOG(LVL_NOTICE, "We connected to %s:%d...", connected->serverHostname, connected->serverPort);
 			} else if (event->type == M2MP_CLIENT_EVENT_DISCONNECTED) {
 				LOG(LVL_NOTICE, "We were disconnected...");
-				sleep(5);
-				m2mp_client_connect(client, client_hostname, client_port);
+				if (!buslog.quit) {
+					LOG(LVL_NOTICE, "Waiting 30s...");
+					sleep(10);
+					LOG(LVL_NOTICE, "Reconnecting...");
+					m2mp_client_connect(client, client_hostname, client_port);
+				}
 			} else if (event->type == M2MP_CLIENT_EVENT_ACK_REQUEST) {
 				m2mp_client_event_ack_request * ackRequest = (m2mp_client_event_ack_request *) event;
 				LOG(LVL_NOTICE, "We received an ackRequest %d", ackRequest->ackNb);
 			} else if (event->type == M2MP_CLIENT_EVENT_ACK_RESPONSE) {
 				m2mp_client_event_ack_response * ackResponse = (m2mp_client_event_ack_response *) event;
 				LOG(LVL_NOTICE, "We received an ackResponse %d", ackResponse->ackNb);
+			} else if (event->type == M2MP_CLIENT_EVENT_POLL_ERROR) {
+				LOG(LVL_WARNING, "We got an internal poll error");
 			} else if (event->type == commandEventId) {
 				m2mp_client_event_command * cmd = (m2mp_client_event_command*) event;
 				LOG(LVL_NOTICE, "We received a command: %s / %s", cmd->argv[0], cmd->cmdId);
+				if ( ! strcmp(cmd->argv[0], "shell") ) {
+					LOG(LVL_NOTICE, "Executing system(\"%s\");", cmd->argv[1]);
+					system(cmd->argv[1]);
+				}
 				m2mp_client_event_command_ack(event, commandsPlugin);
 			} else {
 				LOG(LVL_CRITICAL, "ERROR: Not handled: event->type = %d", event->type);
 			}
 
 			m2mp_client_event_delete(client, event);
-			nbNoEvents = 0;
 		} else {
-			business_logic_code(& buslog, client);
-			if (buslog.quit) {
-				LOG(LVL_CRITICAL, "We are asked to quit");
-				break;
-			}
+			free_time_to_think(& buslog, client);
 		}
 	}
 

@@ -46,6 +46,8 @@ extern "C" {
 		M2MP_CLIENT_EVENT_DATA,
 		/** Data array received */
 		M2MP_CLIENT_EVENT_DATAARRAY,
+		/** Internal poll error */
+		M2MP_CLIENT_EVENT_POLL_ERROR,
 		/** Other events */
 		M2MP_CLIENT_EVENT_PLUGINS
 	} m2mp_client_event_type;

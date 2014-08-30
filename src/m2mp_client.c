@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define M2MP_CLIENT_VERSION "0.1.0"
+#define M2MP_CLIENT_VERSION "0.2.0"
 
 m2mp_client_status_entry * m2mp_client_status_entry_new( const char * name, const char * value ) {
 	m2mp_client_status_entry * entry = malloc( sizeof(m2mp_client_status_entry ) );
@@ -114,6 +114,7 @@ void m2mp_client_event_delete(m2mp_client * this /* = NULL */, m2mp_client_event
         case M2MP_CLIENT_EVENT_DISCONNECTED:
         case M2MP_CLIENT_EVENT_ACK_RESPONSE:
         case M2MP_CLIENT_EVENT_ACK_REQUEST:
+		case M2MP_CLIENT_EVENT_POLL_ERROR:
             break;
 
         default:
@@ -577,10 +578,10 @@ int m2mp_client_net_receive(m2mp_client * this, int size, int timeout /* = 500 *
     int rv = poll(& this->socketPollFDs, 1, timeout);
 
     if (rv == -1) {
-        LOG(LVL_CRITICAL, "ERROR: poll error.");
+        //LOG(LVL_CRITICAL, "ERROR: poll error.");
 
-        m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
-        event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
+        m2mp_client_event * event = (m2mp_client_event *) malloc(sizeof ( m2mp_client_event));
+        event->type = M2MP_CLIENT_EVENT_POLL_ERROR;
         m2mp_client_add_event(this, (m2mp_client_event *) event);
     } else if (rv == 0) {
         LOG(LVL_DEBUG, "Poll timeout...");
@@ -602,7 +603,7 @@ int m2mp_client_net_receive(m2mp_client * this, int size, int timeout /* = 500 *
                 event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
                 m2mp_client_add_event(this, (m2mp_client_event *) event);
             } else if (bytesReceived == 0) {
-                LOG(LVL_NOTICE, "ERROR: Socket disconnected !");
+                LOG(LVL_DEBUG, "ERROR: Socket disconnected !");
 
                 m2mp_client_event_disconnected * event = (m2mp_client_event_disconnected *) malloc(sizeof ( m2mp_client_event_disconnected));
                 event->base.type = M2MP_CLIENT_EVENT_DISCONNECTED;
