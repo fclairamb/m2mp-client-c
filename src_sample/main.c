@@ -67,9 +67,9 @@ char * report_echo(struct st_transmission_task * task) {
 }
 
 transmission_task_t tasks[] = {
-	{ "sen:uptime", & report_uptime, 20},
-	{ "sen:loadavg", & report_loadavg, 5},
-	{ "echo:test", & report_echo, 3},
+	{ "sen:uptime", & report_uptime, 3600},
+	{ "sen:loadavg", & report_loadavg, 60},
+	{ "echo:test", & report_echo, 30},
 	{}
 };
 
@@ -130,7 +130,7 @@ void free_time_to_think(business_logic_t * this, m2mp_client * client) {
 		}
 
 		// We don't do any kind of reporting until we're connected
-		//return;
+		return;
 	}
 
 	{ // We will execute all the possible tasks
