@@ -406,8 +406,10 @@ void m2mp_client_send_ack_requestNb(m2mp_client* this, unsigned char ackNb) {
 	m2mp_client_net_send(this, buffer, 2);
 }
 
-void m2mp_client_send_ack_request(m2mp_client* this) {
-	m2mp_client_send_ack_requestNb(this, this->ackNumber++);
+int m2mp_client_send_ack_request(m2mp_client* this) {
+	int ack;
+	m2mp_client_send_ack_requestNb(this, (ack = this->ackNumber++));
+	return ack;
 }
 
 void m2mp_client_send_ack_response(m2mp_client* this, unsigned char ackNb) {

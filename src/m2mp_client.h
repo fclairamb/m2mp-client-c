@@ -140,8 +140,9 @@ extern "C" {
 	/**
 	 * Send an acknowledge request
 	 * @param this m2mp_client instance
+	 * @return Ack number sent
 	 */
-	void m2mp_client_send_ack_request(m2mp_client * this);
+	int m2mp_client_send_ack_request(m2mp_client * this);
 
 	/**
 	 * Send an acknowledge request with a particular acknowledge number

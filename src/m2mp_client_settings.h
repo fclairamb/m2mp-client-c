@@ -1,12 +1,7 @@
-/* 
- * File:   m2mp_client_settings.h
- * Author: florent
- *
- * Created on 27 January 2011, 23:09
- */
-
 #ifndef M2MP_CLIENT_SETTINGS_H
 #define	M2MP_CLIENT_SETTINGS_H
+
+#include <stdbool.h>
 
 #include "m2mp_client.h"
 #include "dictionnary.h"
@@ -21,8 +16,9 @@ extern "C" {
     typedef struct st_m2mp_client_settings {
         m2mp_client *client;
         dictionnary settings;
-//        linkedlist events;
         unsigned char modified;
+		bool identified;
+		int settingsChangeAckNb;
     } m2mp_client_settings;
 
     m2mp_client_settings * m2mp_client_settings_new(m2mp_client * client );
@@ -35,7 +31,11 @@ extern "C" {
 
     char * m2mp_client_settings_get_value(m2mp_client_settings * this, char * name);
 
-    void m2mp_client_settings_set_value(m2mp_client_settings * this, char * name, char * value);
+    void m2mp_client_settings_set_value_actual(m2mp_client_settings * this, char * name, char * value);
+	
+	void m2mp_client_settings_set_value(m2mp_client_settings * this, char * name, char * value);
+	
+	unsigned char m2mp_client_settings_del(m2mp_client_settings * this, char * name);
 
     void m2mp_client_settings_show_entries(m2mp_client_settings * this );
 
