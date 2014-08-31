@@ -17,6 +17,7 @@ extern "C" {
 	typedef struct {
 		int max_connected_time;
 		bool no_reconnect;
+		char * servers;
 	} args_t;
 
 

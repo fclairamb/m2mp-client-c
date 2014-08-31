@@ -33,7 +33,8 @@ typedef struct {
 	time_t uptime_time;
 	int uptime_period;
 
-	time_t connection_time;
+	time_t connected_time;
+	time_t identified_time;
 
 	bool quit;
 
@@ -41,6 +42,7 @@ typedef struct {
 
 	char **servers;
 	int server_index;
+	int server_sleep_between_connections;
 } business_logic_t;
 
 void business_logic_init(business_logic_t * this) {
@@ -58,7 +60,7 @@ void business_logic_init(business_logic_t * this) {
 	this->uptime_time = now - this->uptime_period;
 
 	this->quit = false;
-	this->connection_time = 0;
+	this->identified_time = 0;
 
 	this->servers = NULL;
 	this->server_index = 0;
@@ -78,25 +80,42 @@ void business_logic_close(business_logic_t * this) {
 	}
 }
 
-int business_logic_connect( business_logic_t * this, m2mp_client * client ) {
+int business_logic_connect(business_logic_t * this, m2mp_client * client) {
 	char buffer[BUFSIZ];
 	char * server = this->servers[this->server_index++];
-	
-	if ( ! server ) {
+
+	if (!server) {
 		this->server_index = 0;
 		server = this->servers[this->server_index++];
 	}
-	
-	strcpy( buffer, server );
-	
+
+	strcpy(buffer, server);
+
 	char * host = strtok(buffer, ":");
 	int port = atoi(strtok(NULL, ":"));
-	
-	return m2mp_client_connect( client, host, port );
+
+	if (this->server_sleep_between_connections) {
+		LOG(LVL_NOTICE, "Sleeping for %d seconds...", this->server_sleep_between_connections);
+		sleep(this->server_sleep_between_connections);
+	}
+
+	return m2mp_client_connect(client, host, port);
 }
 
 void free_time_to_think(business_logic_t * this, m2mp_client * client) {
 	time_t now = time(NULL);
+	if (!this->identified_time) {
+
+		// We wait at most for 30s for an identification response
+		if (this->connected_time && (now - this->connected_time) > 5) {
+			LOG(LVL_WARNING, "Identification request timeout, disconnecting...");
+			this->connected_time = 0;
+			m2mp_client_disconnect(client);
+		}
+
+		// We don't do any kind of reporting until we're connected
+		return;
+	}
 
 	if (now - this->loadavg_time >= this->loadavg_period) {
 		this->loadavg_time += this->loadavg_period;
@@ -123,10 +142,10 @@ void free_time_to_think(business_logic_t * this, m2mp_client * client) {
 		m2mp_client_send_string(client, "sen:uptime", value);
 	}
 
-	if (this->connection_time && this->args.max_connected_time && now - this->connection_time > this->args.max_connected_time) {
+	if (this->identified_time && this->args.max_connected_time && now - this->identified_time > this->args.max_connected_time) {
 		LOG(LVL_NOTICE, "We've been connected for too long! Requesting disconnection...");
 		m2mp_client_send_string(client, "_special", "disconnect_me");
-		this->connection_time = 0;
+		this->identified_time = 0;
 	}
 }
 
@@ -182,6 +201,13 @@ int main(int argc, char** argv) {
 		m2mp_client_set_ident(client, ident);
 	}
 
+	{ // We might have to change the list of servers
+		if (buslog.args.servers) {
+			m2mp_client_settings_set_value(settingsPlugin, "servers", buslog.args.servers);
+			m2mp_client_settings_save_if_necessary(settingsPlugin);
+		}
+	}
+
 	{ // We load or create the list of servers
 		char * servers_values = m2mp_client_settings_get_value(settingsPlugin, "servers");
 		if (!servers_values) {
@@ -221,7 +247,7 @@ int main(int argc, char** argv) {
 
 				if (identResult->status) {
 					LOG(LVL_NOTICE, "We are identified !");
-					buslog.connection_time = time(NULL);
+					buslog.identified_time = time(NULL);
 				} else {
 					LOG(LVL_NOTICE, "We are not identified !");
 					m2mp_client_disconnect(client);
@@ -238,6 +264,8 @@ int main(int argc, char** argv) {
 			} else if (event->type == M2MP_CLIENT_EVENT_CONNECTED) {
 				m2mp_client_event_connected * connected = (m2mp_client_event_connected *) event;
 				LOG(LVL_NOTICE, "We connected to %s:%d...", connected->serverHostname, connected->serverPort);
+				buslog.connected_time = time(NULL);
+				buslog.server_sleep_between_connections = 0;
 			} else if (event->type == M2MP_CLIENT_EVENT_DISCONNECTED) {
 				LOG(LVL_NOTICE, "We were disconnected...");
 				if (!buslog.quit) { // If we are not in quitting process
@@ -245,13 +273,14 @@ int main(int argc, char** argv) {
 						LOG(LVL_NOTICE, "We have to quit ! (--no-reconnect option)");
 						buslog.quit = true;
 					} else { // We reconnect
-						if ( buslog.connection_time ) { // We only wait if we successfully connected once
-							LOG(LVL_NOTICE, "Waiting 30s...");
-							sleep(10);
-						}
 						LOG(LVL_NOTICE, "Reconnecting...");
 						business_logic_connect(&buslog, client);
 					}
+				}
+				buslog.connected_time = 0;
+				buslog.identified_time = 0;
+				if (buslog.server_sleep_between_connections < 60) {
+					buslog.server_sleep_between_connections += 1;
 				}
 			} else if (event->type == M2MP_CLIENT_EVENT_ACK_REQUEST) {
 				m2mp_client_event_ack_request * ackRequest = (m2mp_client_event_ack_request *) event;
@@ -301,9 +330,9 @@ int main(int argc, char** argv) {
 
 	// We delete the client
 	m2mp_client_delete(& client);
-	
+
 	// We delete the business logic allocated data
-	business_logic_close( & buslog );
+	business_logic_close(& buslog);
 
 	return EXIT_SUCCESS;
 }

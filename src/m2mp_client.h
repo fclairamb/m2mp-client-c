@@ -26,6 +26,7 @@ extern "C" {
 // History:
 // 2011-01-22 - 0.0.1 : First version release
 // 2012-04-12 - 0.1.0 : Added some documentation and a version method
+// 2014-08-30 - 0.2.0 : Various (but small) changes
 
 	/**
 	 * Create a new m2mp_client_data instance
@@ -186,9 +187,19 @@ extern "C" {
 	 */
 	void m2mp_client_rmv_plugin(m2mp_client * this, void * instance);
 
-	
+	/**
+	 * Register a plugin event type ID
+     * @param this Instance of the m2mp client library
+     * @return event type ID
+     */
 	int m2mp_client_register_event_type( m2mp_client * this );
 	
+	/**
+	 * Register a destructor for an event type ID
+     * @param this Instance of the m2mp client library
+     * @param event_id Event id
+     * @param func Destructor to uses
+     */
 	void m2mp_client_register_event_destructor( m2mp_client * this, int event_id, void (*func)(m2mp_client_event * event)  );
 #ifdef	__cplusplus
 }
