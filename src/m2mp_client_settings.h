@@ -27,7 +27,7 @@ extern "C" {
 
     m2mp_client_event ** m2mp_client_settings_work(void * ptrClient, void * ptrThis, m2mp_client_event * event);
 
-    void m2mp_client_settings_delete(m2mp_client_settings ** pThis);
+    void m2mp_client_settings_delete(m2mp_client_settings * this);
 
     char * m2mp_client_settings_get_value(m2mp_client_settings * this, char * name);
 

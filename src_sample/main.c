@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
 	m2mp_client_rmv_plugin(client, commandsPlugin);
 
 	// We delete the plugins
-	m2mp_client_settings_delete(& settingsPlugin);
+	m2mp_client_settings_delete(settingsPlugin);
 	m2mp_client_commands_delete(commandsPlugin);
 
 	// We delete the client

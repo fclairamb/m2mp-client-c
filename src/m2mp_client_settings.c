@@ -30,13 +30,9 @@ void m2mp_client_settings_init(m2mp_client_settings * this, m2mp_client * client
 	m2mp_client_add_plugin(client, this, m2mp_client_settings_work);
 }
 
-void m2mp_client_settings_delete(m2mp_client_settings ** pThis) {
-	m2mp_client_settings * this = *pThis;
-
+void m2mp_client_settings_delete(m2mp_client_settings * this) {
 	dictionnary_clear(& this->settings);
-
 	free(this);
-	*pThis = NULL;
 }
 
 void m2mp_client_settings_treat_data(m2mp_client_settings * this, m2mp_client_event_data *dataEvent) {
