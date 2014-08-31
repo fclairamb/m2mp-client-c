@@ -24,6 +24,7 @@ m2mp_client_settings * m2mp_client_settings_new(m2mp_client * client) {
 
 void m2mp_client_settings_init(m2mp_client_settings * this, m2mp_client * client) {
 	this->modified = 0;
+	this->settingsChangeAckNb = -1;
 	this->client = client;
 	dictionnary_init(& this->settings);
 
@@ -257,19 +258,23 @@ void m2mp_client_settings_set_value_actual(m2mp_client_settings * this, char * n
 
 void m2mp_client_settings_set_value(m2mp_client_settings * this, char * name, char * value) {
 
-	if (name[0] != '.' && name[0] != '_') { // We will check if it's a setting change
-		char * previous = m2mp_client_settings_get_value(this, name);
-		if (strcmp(value, previous)) {
+	bool internal = (name[0] == '.' || name[0] == '_');
+	// We will check if it's a setting change
+	char * previous = m2mp_client_settings_get_value(this, name);
+	if (! previous || strcmp(value, previous)) {
+		if (!internal) {
 			char buffer[BUFSIZ];
 			sprintf(buffer, ".%s.modified", name);
 			m2mp_client_settings_set_value_actual(this, buffer, "1");
+		}
 
-			// Actual saving 
-			m2mp_client_settings_set_value_actual(this, name, value);
+		// Actual saving 
+		m2mp_client_settings_set_value_actual(this, name, value);
 
-			// We disable a previous acknowledge request we might have issued
+		// We disable a previous acknowledge request we might have issued
+		
+		if (!internal) {
 			this->settingsChangeAckNb = -1;
-			
 			m2mp_client_settings_might_report_changes(this);
 		}
 	}

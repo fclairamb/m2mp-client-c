@@ -23,16 +23,6 @@
 const char * capabilities_ [] = {"sensor", "echo", "c_client_sample", NULL};
 
 typedef struct {
-	time_t loadavg_time;
-	int loadavg_period;
-
-	time_t echo_time;
-	int echo_period;
-	int echo_counter;
-
-	time_t uptime_time;
-	int uptime_period;
-
 	time_t connected_time;
 	time_t identified_time;
 
@@ -45,20 +35,45 @@ typedef struct {
 	int server_sleep_between_connections;
 } business_logic_t;
 
+typedef struct st_transmission_task {
+	char * channel;
+	char * (*func)(struct st_transmission_task * task);
+	int period;
+	void * data;
+	time_t last_execution;
+} transmission_task_t;
+
+char * report_uptime(struct st_transmission_task * task) {
+	static char value[256];
+	struct sysinfo info;
+	sysinfo(& info);
+	sprintf(value, "%ld", info.uptime);
+	return value;
+}
+
+char * report_loadavg(struct st_transmission_task * task) {
+	static char value[256];
+	double loadavg;
+	getloadavg(& loadavg, 1);
+	sprintf(value, "%3.2f", loadavg);
+	return value;
+}
+
+char * report_echo(struct st_transmission_task * task) {
+	static char value[256];
+	static int counter;
+	sprintf(value, "echo_%d", counter++);
+	return value;
+}
+
+transmission_task_t tasks[] = {
+	{ "sen:uptime", & report_uptime, 20},
+	{ "sen:loadavg", & report_loadavg, 5},
+	{ "echo:test", & report_echo, 3},
+	{}
+};
+
 void business_logic_init(business_logic_t * this) {
-	time_t now = time(NULL);
-
-
-	this->loadavg_period = 60;
-	this->loadavg_time = now - this->loadavg_period;
-
-	this->echo_period = 10;
-	this->echo_time = now - this->echo_period;
-	this->echo_counter = 0;
-
-	this->uptime_period = 300;
-	this->uptime_time = now - this->uptime_period;
-
 	this->quit = false;
 	this->identified_time = 0;
 
@@ -104,42 +119,37 @@ int business_logic_connect(business_logic_t * this, m2mp_client * client) {
 
 void free_time_to_think(business_logic_t * this, m2mp_client * client) {
 	time_t now = time(NULL);
+
 	if (!this->identified_time) {
 
 		// We wait at most for 30s for an identification response
-		if (this->connected_time && (now - this->connected_time) > 5) {
-			LOG(LVL_WARNING, "Identification request timeout, disconnecting...");
+		if (this->connected_time && (now - this->connected_time) > 30) {
+			LOG(LVL_WARNING, "Identification request timeout (30s), disconnecting...");
 			this->connected_time = 0;
 			m2mp_client_disconnect(client);
 		}
 
 		// We don't do any kind of reporting until we're connected
-		return;
+		//return;
 	}
 
-	if (now - this->loadavg_time >= this->loadavg_period) {
-		this->loadavg_time += this->loadavg_period;
-		double loadavg;
-		getloadavg(& loadavg, 1);
-		char value[256];
-		sprintf(value, "%3.2f", loadavg);
-		m2mp_client_send_string(client, "sen:loadavg", value);
-	}
-
-	if (now - this->echo_time >= this->echo_period) {
-		this->echo_time += this->echo_period;
-		char content[256];
-		sprintf(content, "echo_%d", this->echo_counter++);
-		m2mp_client_send_string(client, "echo:test", content);
-	}
-
-	if (now - this->uptime_time >= this->uptime_period) {
-		this->uptime_time += this->uptime_period;
-		char value[256];
-		struct sysinfo info;
-		sysinfo(& info);
-		sprintf(value, "%ld", info.uptime);
-		m2mp_client_send_string(client, "sen:uptime", value);
+	{ // We will execute all the possible tasks
+		int i = 0;
+		transmission_task_t * task;
+		for (i = 0; (task = &tasks[i])->func; i++) {
+			int diff = now - task->last_execution;
+			if (diff >= task->period) {
+				char * value = task->func(task);
+				if (value) {
+					m2mp_client_send_string(client, task->channel, value);
+				}
+				if (diff > (2 * task->period)) {
+					task->last_execution = now;
+				} else {
+					task->last_execution += task->period;
+				}
+			}
+		}
 	}
 
 	if (this->identified_time && this->args.max_connected_time && now - this->identified_time > this->args.max_connected_time) {
@@ -211,7 +221,7 @@ int main(int argc, char** argv) {
 	{ // We load or create the list of servers
 		char * servers_values = m2mp_client_settings_get_value(settingsPlugin, "servers");
 		if (!servers_values) {
-			servers_values = "localhost:3010,localhost:3000";
+			servers_values = "localhost:3010,localhost:3000,ovh3.webingenia.com:3010,ovh3.webingenia.com:3000,ovh1.webingenia.com:3010,ovh1.webingenia.com:3000";
 			m2mp_client_settings_set_value(settingsPlugin, "servers", servers_values);
 			m2mp_client_settings_save_if_necessary(settingsPlugin);
 		}

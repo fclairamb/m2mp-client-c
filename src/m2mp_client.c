@@ -16,6 +16,8 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <error.h>
+#include <errno.h>
 
 #define M2MP_CLIENT_VERSION "0.2.0"
 
@@ -329,7 +331,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
 	 */
 
 	if (connect(this->socketFD, (struct sockaddr *) & stSockAddr, sizeof ( stSockAddr)) == -1) {
-		LOG(LVL_CRITICAL, "ERROR: Connect to server failed.");
+		LOG(LVL_CRITICAL, "ERROR: Connect to server failed: %s (%d)", strerror(errno), errno);
 		close(this->socketFD);
 		this->socketFD = -1;
 
