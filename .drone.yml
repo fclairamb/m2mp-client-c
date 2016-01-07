@@ -2,10 +2,9 @@ build:
   debian:
     image: $$DEB_IMAGES
     commands:
-      - lsb_release -a || cat /etc/*-release || echo "No release !"
       - apt-get update -y
       - apt-get install gcc -y
-      - gcc --version
+      - make
 
 matrix:
   DEB_IMAGES:
