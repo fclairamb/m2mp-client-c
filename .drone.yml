@@ -1,4 +1,18 @@
-image: debian
-script:
-  - make
+build:
+  debian:
+    image: $$DEB_IMAGES
+    commands:
+      - lsb_release -a || cat /etc/*-release || echo "No release !"
+      - apt-get update -y
+      - apt-get install gcc -y
+      - gcc --version
+
+matrix:
+  DEB_IMAGES:
+    - debian:6
+    - debian:7
+    - debian:8
+    - ubuntu:12.04
+    - ubuntu:14.04
+    - ubuntu:16.04
 
