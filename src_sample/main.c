@@ -163,7 +163,12 @@ business_logic_t buslog;
 
 void signal_handler(int s) {
 	printf("Caught signal %s (%d)\n", strsignal(s), s);
-	buslog.quit = 1;
+	if ( buslog.quit ) {
+		exit(2);
+	}
+	else {
+		buslog.quit = 1;
+	}
 }
 
 /*
@@ -221,7 +226,7 @@ int main(int argc, char** argv) {
 	{ // We load or create the list of servers
 		char * servers_values = m2mp_client_settings_get_value(settingsPlugin, "servers");
 		if (!servers_values) {
-			servers_values = "localhost:3010,localhost:3000,ovh3.webingenia.com:3010,ovh3.webingenia.com:3000,ovh1.webingenia.com:3010,ovh1.webingenia.com:3000";
+			servers_values = "ovh3.webingenia.com:3000,localhost:3000,ovh1.webingenia.com:3000,localhost:3010,ovh3.webingenia.com:3010,ovh1.webingenia.com:3010";
 			m2mp_client_settings_set_value(settingsPlugin, "servers", servers_values);
 			m2mp_client_settings_save_if_necessary(settingsPlugin);
 		}

@@ -91,10 +91,12 @@ $(DIST):
 	[ -e $(DIST) ] || mkdir -p $(DIST)
 	touch $(DIST)
 
-$(TARGET_SHARED): $(OBJ) $(DIST)
+$(TARGET_SHARED): $(OBJ)
+	[ -d $(DIST) ] || mkdir -p $(DIST)
 	$(CC) -shared -o $(TARGET_SHARED) $(OBJ) $(CFLAGS) $(LDFLAGS) 
 	
-$(TARGET_STATIC): $(OBJ) $(DIST)
+$(TARGET_STATIC): $(OBJ)
+	[ -d $(DIST) ] || mkdir -p $(DIST)
 	$(AR) rcs $(TARGET_STATIC) $(OBJ)
 
 $(TARGET_SAMPLE_SHARED): $(OBJ_SAMPLE) $(TARGET_SHARED)
@@ -129,5 +131,6 @@ install: build Makefile $(DESTDIR)$(PREFIX)
 	# Binaries
 	[ -d $(DESTDIR)$(PREFIX)/bin ] || mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp -u dist/last/m2mp_client.so $(DESTDIR)$(PREFIX)/lib/m2mp_client.so
+	cp -u dist/last/m2mp_client.a $(DESTDIR)$(PREFIX)/lib/m2mp_client.a
 	cp -u dist/last/m2mp_client_sample $(DESTDIR)$(PREFIX)/bin/m2mp_client_sample
 

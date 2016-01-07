@@ -331,7 +331,7 @@ int m2mp_client_connect(m2mp_client * this, const char * hostname, int port) {
 	 */
 
 	if (connect(this->socketFD, (struct sockaddr *) & stSockAddr, sizeof ( stSockAddr)) == -1) {
-		LOG(LVL_CRITICAL, "ERROR: Connect to server failed: %s (%d)", strerror(errno), errno);
+		LOG(LVL_CRITICAL, "ERROR: Could not connect to \"%s:%d\" : %s (%d)", hostname, port, strerror(errno), errno);
 		close(this->socketFD);
 		this->socketFD = -1;
 
