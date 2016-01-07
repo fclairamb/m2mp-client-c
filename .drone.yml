@@ -1,4 +1,17 @@
-image: debian
-script:
-  - make
+build:
+  debian:
+    image: $$DEB_IMAGES
+    commands:
+      - apt-get update -y
+      - apt-get install gcc make -y
+      - make
+
+matrix:
+  DEB_IMAGES:
+    - debian:6
+    - debian:7
+    - debian:8
+    - ubuntu:12.04
+    - ubuntu:14.04
+    - ubuntu:16.04
 
